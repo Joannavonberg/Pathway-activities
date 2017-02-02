@@ -32,7 +32,7 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
         assign(dis_om, AddSurvivalData(df, clin, om), envir = .GlobalEnv)
       }
       if(save){
-        writeFile(df, dis_om)
+        writeFile(get(dis_om), dis_om)
       }
     }
   }
