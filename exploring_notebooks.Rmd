@@ -1,0 +1,54 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Initialization of packages and sourcing the necessary functions:
+```{r}
+# exploring the RTCGA package
+# https://www.r-bloggers.com/rtcga-factory-of-r-packages-quick-guide/
+
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("RTCGA")
+# biocLite("RTCGA.clinical")
+# biocLite("RTCGA.mRNA")
+# biocLite("RTCGA.miRNASeq")
+# biocLite("RTCGA.methylation")
+# biocLite("RTCGA.CNV")
+library("RTCGA")
+library("RTCGA.clinical")
+library("RTCGA.mRNA")
+library("RTCGA.miRNASeq")
+library("RTCGA.methylation")
+library("RTCGA.CNV")
+
+source("RTCGA_functions.R")
+```
+Choose which diseases and omics data sources we want to consider:
+```{r}
+diseases <- c("BRCA", "GBM", "OV")
+omics <- c("mRNA", "miRNASeq", "methylation", "CNV")
+```
+Add the variable "days_to_death" to the omics data (and remove patients that don't have this variable) and find the intersection of patients that are in all data sets:
+```{r}
+AddSurvDataToOmics(diseases, omics, save = FALSE)
+
+for(dis in diseases){
+  assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = TRUE))
+}
+```
+There is a problem: for GBM, there is only miRNA-seq data for 5 patients and these do not show up in both the CNV and the methylation data. Therefore there are no patients for which all data is there and the intersection is empty.
+```{r}
+#install.packages("VennDiagram")
+library("VennDiagram")
+grid.draw(venn.diagram(list(CNV = GBM_CNV$patient_id, Methylation = GBM_methylation$patient_id, miRNA = GBM_miRNASeq$patient_id), filename = NULL))
+```
+
+```{r}
+GBM_miRNASeq_donotuse <- GBM_miRNASeq
+GBM_miRNASeq <- NA
+
+GBM_inter <- FindIntersection(omics, "GBM")
+```
+# there are 283 GBM patients for which there is methylation and CNV data
+# I should probably look for mRNA and more miRNA data
