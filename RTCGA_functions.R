@@ -76,3 +76,28 @@ AddSurvivalData <- function(omics, clin, om){
 writeFile <- function(df, fn){
   write.table(df, sprintf("%s_with_survival_data.txt", fn))
 }
+
+FindIntersection <- function(omics, disease, save = FALSE){
+  # might not be a good idea, to copy very large dataframes
+  oms <- mget(paste(disease, omics, sep = "_"), envir = .GlobalEnv, ifnotfound = NA)
+  # print(length(oms))
+  # print("...")
+  i <- 1
+  while(is.na(oms[[i]])){
+    # print(i)
+    i = i + 1
+  }
+  # print("...")
+  res <- oms[[i]]$patient_id
+  # print(res[1:10])
+  while(i <= length(oms) && !is.na(oms[[i]])){
+    res <- res[res %in% oms[[i]]$patient_id]
+    i = i + 1
+    # print(i)
+  }
+  # print("......")
+  if(save){
+    write(unique(res), sprintf("%s_%s_patients.txt", disease, paste0(omics, collapse = "-")))
+  }
+  return(unique(res))
+}
