@@ -20,7 +20,6 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
       else{
         next
       }
-      print(sprintf("dimensions of df for %s: %s", om, dim(df)))
       dis_om <- sprintf("%s_%s", dis, om)
       if(om == "CNV"){
         assign(dis_om, AddSurvivalData(df, clin, om), envir = .GlobalEnv)
