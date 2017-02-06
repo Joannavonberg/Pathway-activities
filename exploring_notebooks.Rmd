@@ -34,21 +34,28 @@ Add the variable "days_to_death" to the omics data (and remove patients that don
 AddSurvDataToOmics(diseases, omics, save = FALSE)
 
 for(dis in diseases){
-  assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = TRUE))
+  assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = FALSE))
 }
 ```
 There is a problem: for GBM, there is only miRNA-seq data for 5 patients and these do not show up in both the CNV and the methylation data. Therefore there are no patients for which all data is there and the intersection is empty.
 ```{r}
 #install.packages("VennDiagram")
-library("VennDiagram")
-grid.draw(venn.diagram(list(CNV = GBM_CNV$patient_id, Methylation = GBM_methylation$patient_id, miRNA = GBM_miRNASeq$patient_id), filename = NULL))
+# library("VennDiagram")
+GBM_venn <- venn.diagram(list(CNV = GBM_CNV$patient_id, Methylation = GBM_methylation$patient_id, miRNA = GBM_miRNASeq$patient_id), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(GBM_venn, recording = FALSE)
 ```
 
+There are 283 GBM patients for which there is methylation and CNV data; I should probably look for mRNA and more miRNA data. First, check if the downloading of the data using the RTCGA package is being done correctly.
 ```{r}
-GBM_miRNASeq_donotuse <- GBM_miRNASeq
-GBM_miRNASeq <- NA
-
-GBM_inter <- FindIntersection(omics, "GBM")
+?RTCGA
+# Snapshots of the clinical, mutations, CNVs, rnaseq, RPPA, mRNA, miRNASeq and methylation datasets from the 2015-11-01 release date (check all dates of release with checkTCGA('Dates')) are included in the RTCGA.data family (factory) that contains 9 packages
+# I should do that
+checkTCGA('Dates')
+biocLite("RTCGA.mRNA.20160128")
+library("RTCGA.mRNA.20160128")
+# test <- RTCGA.mRNA.20160128 doesn't work
+downloadTCGA("GBM", dataSet = "mRNA", date = "2016-01-28", destDir = ".")
+test_mRNA_GBM <- readTCGA("gdac.broadinstitute.org_GBM.mRNA_Preprocess_Median.Level_3.2016012800.0.0/GBM.medianexp.txt", dataType = "mRNA")
 ```
-# there are 283 GBM patients for which there is methylation and CNV data
-# I should probably look for mRNA and more miRNA data
+De kant-en-klare RTCGA.xxx packages gebruiken is dus niet zo slim.
