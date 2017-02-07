@@ -3,24 +3,38 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-Initialization of packages and sourcing the necessary functions:
+test
+
+Initialization of packages and sourcing the necessary functions (to install on R-server, specify directory for the packages):
 ```{r}
 # exploring the RTCGA package
 # https://www.r-bloggers.com/rtcga-factory-of-r-packages-quick-guide/
+# a <- tools:::.read_repositories(file.path(R.home("etc"), "repositories"))
+# install.packages("BiocInstaller", repos = a["BioCsoft", "URL"], lib = "../r-packages/")
+# source("http://bioconductor.org/biocLite.R")
+# install.packages("BiocInstaller", repos="https://bioconductor.org/packages/3.2/bioc", lib = "../r-packages/")
+# url <- "http://bioconductor.org/packages/3.1/bioc/src/contrib/PACKAGES"
+# t <- tempfile()
+# download.file(url,t)
 
-# source("https://bioconductor.org/biocLite.R")
-# biocLite("RTCGA")
-# biocLite("RTCGA.clinical")
-# biocLite("RTCGA.mRNA")
+# remove.packages("BiocInstaller", lib = "../r-packages/")
+# source("../Downloads/biocLite.R")
+
+# biocLite(lib.loc = "../r-packages/")
+# biocLite("RTCGA", lib.loc = "../r-packages/")
+# biocLite("RTCGA.clinical", lib.loc = "../r-packages/")
+# biocLite("RTCGA.mRNA", lib.loc = "../r-packages/")
 # biocLite("RTCGA.miRNASeq")
 # biocLite("RTCGA.methylation")
 # biocLite("RTCGA.CNV")
-library("RTCGA")
-library("RTCGA.clinical")
-library("RTCGA.mRNA")
-library("RTCGA.miRNASeq")
-library("RTCGA.methylation")
-library("RTCGA.CNV")
+library("RTCGA", lib.loc = "../r-packages/")
+# library("RTCGA.clinical", lib.loc = "../r-packages/")
+# library("RTCGA.mRNA", lib.loc = "../r-packages/"))
+# library("RTCGA.miRNASeq")
+# library("RTCGA.methylation")
+# library("RTCGA.CNV")
+
+# install.packages(lib = "../r-packages/")
 
 source("RTCGA_functions.R")
 ```
@@ -51,11 +65,19 @@ There are 283 GBM patients for which there is methylation and CNV data; I should
 ?RTCGA
 # Snapshots of the clinical, mutations, CNVs, rnaseq, RPPA, mRNA, miRNASeq and methylation datasets from the 2015-11-01 release date (check all dates of release with checkTCGA('Dates')) are included in the RTCGA.data family (factory) that contains 9 packages
 # I should do that
-checkTCGA('Dates')
-biocLite("RTCGA.mRNA.20160128")
-library("RTCGA.mRNA.20160128")
+# checkTCGA('Dates')
+setRepositories()
+# type: 1 2 3 4 5 6 10
+biocLite("RTCGA.mRNA.20160128", lib.loc = "../r-packages/")
+# was successful
+library("RTCGA.mRNA.20160128", lib.loc = "../r-packages/")
 # test <- RTCGA.mRNA.20160128 doesn't work
 downloadTCGA("GBM", dataSet = "mRNA", date = "2016-01-28", destDir = ".")
 test_mRNA_GBM <- readTCGA("gdac.broadinstitute.org_GBM.mRNA_Preprocess_Median.Level_3.2016012800.0.0/GBM.medianexp.txt", dataType = "mRNA")
 ```
-De kant-en-klare RTCGA.xxx packages gebruiken is dus niet zo slim.
+Using the ready-made RTCGA.xxx packages is not the best idea. So I will have to rewrite the functions to download and edit the data.
+```{r}
+downloadTCGA(diseases, "Merge_Clinical.Level_1", destDir = "../Data")
+?checkTCGA
+datasets <- checkTCGA("DataSets", "BRCA")
+```
