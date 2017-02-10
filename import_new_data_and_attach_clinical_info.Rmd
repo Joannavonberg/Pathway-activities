@@ -1,0 +1,42 @@
+---
+title: "Adding clinical data to omics data"
+output: html_notebook
+---
+I'm installing directly from Github instead of using Bioconductor, because:
+- I'm using Rstudio on a server, and I could not manage to properly install bioconductor there
+- The (stable) Github version is the most recent
+```{r}
+if (!require(devtools)) {
+    install.packages("devtools", lib = "../r-packages")
+    require(devtools)
+}
+
+diseases <- c("BRCA", "GBM", "OV")
+# omics <- c("mRNA", "miRNASeq", "methylation", "CNV")
+omics <- c("mRNA", "miRNASeq", "CNV")
+
+```
+
+```{r}
+a <- paste("RTCGA/RTCGA.", c("clinical", omics), sep = "")
+b <- paste(a, ".20160128", sep = "")
+pckgs <- c(a,b)
+# c(paste("RTCGA/RTCGA.", c("clinical", omics)))
+# paste(, ".20160128")
+for(p in pckgs){
+  # print(p)
+  # install_github(p, build_vignettes = TRUE, lib = "../r-packages")
+  library(substr(p, 7, nchar(p)), character.only = TRUE)
+  # print(" ")
+  }
+source("RTCGA_functions.R")
+```
+
+```{r}
+AddSurvDataToOmics(diseases, omics, save = FALSE)
+
+for(dis in diseases){
+  assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = FALSE))
+}
+
+```

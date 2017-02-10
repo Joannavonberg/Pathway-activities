@@ -3,8 +3,6 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-test
-
 Initialization of packages and sourcing the necessary functions (to install on R-server, specify directory for the packages):
 ```{r}
 # exploring the RTCGA package
@@ -34,6 +32,18 @@ library("RTCGA", lib.loc = "../r-packages/")
 # library("RTCGA.methylation")
 # library("RTCGA.CNV")
 
+if (!require(devtools)) {
+    install.packages("devtools")
+    require(devtools)
+}
+install_github("RTCGA/RTCGA", build_vignettes = TRUE)
+install_github("RTCGA/RTCGA.clinical.20160128", build_vignettes = TRUE)
+install_github("RTCGA/RTCGA.mRNA.20160128", build_vignettes = TRUE)
+install_github("RTCGA/RTCGA.miRNASeq.20160128", build_vignettes = TRUE)
+library("RTCGA.clinical.20160128")
+library("RTCGA.mRNA.20160128")
+library("RTCGA.miRNASeq.20160128")
+
 # install.packages(lib = "../r-packages/")
 
 source("RTCGA_functions.R")
@@ -41,7 +51,7 @@ source("RTCGA_functions.R")
 Choose which diseases and omics data sources we want to consider:
 ```{r}
 diseases <- c("BRCA", "GBM", "OV")
-omics <- c("mRNA", "miRNASeq", "methylation", "CNV")
+omics <- c("mRNA", "miRNASeq")#, "methylation", "CNV")
 ```
 Add the variable "days_to_death" to the omics data (and remove patients that don't have this variable) and find the intersection of patients that are in all data sets:
 ```{r}
@@ -81,3 +91,4 @@ downloadTCGA(diseases, "Merge_Clinical.Level_1", destDir = "../Data")
 ?checkTCGA
 datasets <- checkTCGA("DataSets", "BRCA")
 ```
+For the newest version of Rstudio, a new RTCGA-package is available with the newest data (2016-01-28). I can install this package on my laptop, but the rstudio on the Linux computer first needs to be updated.
