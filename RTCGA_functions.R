@@ -68,6 +68,7 @@ AddSurvivalData <- function(omics, clin, om){
   merge_patients <- rownames(clin) %in% patients_omics
   
   patients <- rownames(clin)[merge_patients]
+  # hier ergens iets van: hee, als dit PRAD is dan doe iets met het weefseltype, anders:
   days_to_death <- clin$patient.days_to_death[merge_patients]
   names(days_to_death) <- patients
   days_to_last_followup <- clin$patient.days_to_last_followup[merge_patients]
