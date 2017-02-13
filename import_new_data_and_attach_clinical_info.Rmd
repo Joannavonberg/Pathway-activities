@@ -6,6 +6,8 @@ I'm installing directly from Github instead of using Bioconductor, because:
 - I'm using Rstudio on a server, and I could not manage to properly install bioconductor there
 - The (stable) Github version is the most recent
 ```{r}
+# This works now, didn't work before with the old version of Rstudio...
+source("http://bioconductor.org/biocLite.R")
 if (!require(devtools)) {
     install.packages("devtools", lib = "../r-packages")
     require(devtools)
@@ -18,15 +20,21 @@ omics <- c("mRNA", "miRNASeq", "CNV")
 ```
 
 ```{r}
-a <- paste("RTCGA/RTCGA.", c("clinical", omics), sep = "")
+a <- paste("RTCGA.", c("clinical", omics), sep = "")
 b <- paste(a, ".20160128", sep = "")
 pckgs <- c(a,b)
 # c(paste("RTCGA/RTCGA.", c("clinical", omics)))
 # paste(, ".20160128")
-for(p in pckgs){
+# install.packages("rtools", lib = "../r-packages")
+install_github("RTCGA/RTCGA", build_vignettes = TRUE, lib = "../r-packages")
+
+# install_github("Bioconductor-mirror/AnnotationHub", build_vignettes = TRUE, lib = "../r-packages")
+# install_github("Bioconductor/ExperimentHub", build_vignettes = TRUE, lib = "../r-packages")
+for(p in pckgs[5:8]){
   # print(p)
   # install_github(p, build_vignettes = TRUE, lib = "../r-packages")
-  library(substr(p, 7, nchar(p)), character.only = TRUE)
+  biocLite(p, lib = "../r-packages")
+  library(p, character.only = TRUE)
   # print(" ")
   }
 source("RTCGA_functions.R")

@@ -175,51 +175,64 @@ $(document).ready(function () {
 <p>I’m installing directly from Github instead of using Bioconductor, because: - I’m using Rstudio on a server, and I could not manage to properly install bioconductor there - The (stable) Github version is the most recent</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWYgKCFyZXF1aXJlKGRldnRvb2xzKSkge1xuICAgIGluc3RhbGwucGFja2FnZXMoXCJkZXZ0b29sc1wiLCBsaWIgPSBcIi4uL3ItcGFja2FnZXNcIilcbiAgICByZXF1aXJlKGRldnRvb2xzKVxufVxuXG5kaXNlYXNlcyA8LSBjKFwiQlJDQVwiLCBcIkdCTVwiLCBcIk9WXCIpXG4jIG9taWNzIDwtIGMoXCJtUk5BXCIsIFwibWlSTkFTZXFcIiwgXCJtZXRoeWxhdGlvblwiLCBcIkNOVlwiKVxub21pY3MgPC0gYyhcIm1STkFcIiwgXCJtaVJOQVNlcVwiLCBcIkNOVlwiKVxuXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWYgKCFyZXF1aXJlKGRldnRvb2xzKSkge1xuICAgIGluc3RhbGwucGFja2FnZXMoXCJkZXZ0b29sc1wiLCBsaWIgPSBcIi4uL3ItcGFja2FnZXNcIilcbiAgICByZXF1aXJlKGRldnRvb2xzKVxufVxuYGBgIn0= -->
 <pre class="r"><code>if (!require(devtools)) {
     install.packages(&quot;devtools&quot;, lib = &quot;../r-packages&quot;)
     require(devtools)
-}
-
-diseases &lt;- c(&quot;BRCA&quot;, &quot;GBM&quot;, &quot;OV&quot;)
+}</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBkZXZ0b29sc1xuIn0= -->
+<pre><code>Loading required package: devtools</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGlzZWFzZXMgPC0gYyhcIkJSQ0FcIiwgXCJHQk1cIiwgXCJPVlwiKVxuIyBvbWljcyA8LSBjKFwibVJOQVwiLCBcIm1pUk5BU2VxXCIsIFwibWV0aHlsYXRpb25cIiwgXCJDTlZcIilcbm9taWNzIDwtIGMoXCJtUk5BXCIsIFwibWlSTkFTZXFcIiwgXCJDTlZcIilcbmBgYCJ9 -->
+<pre class="r"><code>diseases &lt;- c(&quot;BRCA&quot;, &quot;GBM&quot;, &quot;OV&quot;)
 # omics &lt;- c(&quot;mRNA&quot;, &quot;miRNASeq&quot;, &quot;methylation&quot;, &quot;CNV&quot;)
-omics &lt;- c(&quot;mRNA&quot;, &quot;miRNASeq&quot;, &quot;CNV&quot;)
-</code></pre>
+omics &lt;- c(&quot;mRNA&quot;, &quot;miRNASeq&quot;, &quot;CNV&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYSA8LSBwYXN0ZShcIlJUQ0dBL1JUQ0dBLlwiLCBjKFwiY2xpbmljYWxcIiwgb21pY3MpLCBzZXAgPSBcIlwiKVxuYiA8LSBwYXN0ZShhLCBcIi4yMDE2MDEyOFwiLCBzZXAgPSBcIlwiKVxucGNrZ3MgPC0gYyhhLGIpXG4jIGMocGFzdGUoXCJSVENHQS9SVENHQS5cIiwgYyhcImNsaW5pY2FsXCIsIG9taWNzKSkpXG4jIHBhc3RlKCwgXCIuMjAxNjAxMjhcIilcbmZvcihwIGluIHBja2dzKXtcbiAgIyBwcmludChwKVxuICAjIGluc3RhbGxfZ2l0aHViKHAsIGJ1aWxkX3ZpZ25ldHRlcyA9IFRSVUUsIGxpYiA9IFwiLi4vci1wYWNrYWdlc1wiKVxuICBsaWJyYXJ5KHN1YnN0cihwLCA3LCBuY2hhcihwKSksIGNoYXJhY3Rlci5vbmx5ID0gVFJVRSlcbiAgIyBwcmludChcIiBcIilcbiAgfVxuc291cmNlKFwiUlRDR0FfZnVuY3Rpb25zLlJcIilcbmBgYCJ9 -->
-<pre class="r"><code>a &lt;- paste(&quot;RTCGA/RTCGA.&quot;, c(&quot;clinical&quot;, omics), sep = &quot;&quot;)
-b &lt;- paste(a, &quot;.20160128&quot;, sep = &quot;&quot;)
-pckgs &lt;- c(a,b)
-# c(paste(&quot;RTCGA/RTCGA.&quot;, c(&quot;clinical&quot;, omics)))
-# paste(, &quot;.20160128&quot;)
-for(p in pckgs){
-  # print(p)
-  # install_github(p, build_vignettes = TRUE, lib = &quot;../r-packages&quot;)
-  library(substr(p, 7, nchar(p)), character.only = TRUE)
-  # print(&quot; &quot;)
-  }
-source(&quot;RTCGA_functions.R&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGRpcyBpbiBkaXNlYXNlcyl7XG4gIGFzc2lnbihzcHJpbnRmKFwiJXNfaW50ZXJcIiwgZGlzKSwgRmluZEludGVyc2VjdGlvbihvbWljcywgZGlzLCBzYXZlID0gRkFMU0UpKVxufVxuXG5gYGAifQ== -->
-<pre class="r"><code>for(dis in diseases){
-  assign(sprintf(&quot;%s_inter&quot;, dis), FindIntersection(omics, dis, save = FALSE))
-}
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW5zdGFsbF9naXRodWIoXCJSVENHQS9SVENHQVwiLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBsaWIgPSBcIi4uL3ItcGFja2FnZXNcIilcblxuYGBgIn0= -->
+<pre class="r"><code>install_github(&quot;RTCGA/RTCGA&quot;, build_vignettes = TRUE, lib = &quot;../r-packages&quot;)
 </code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoidGhlIGNvbmRpdGlvbiBoYXMgbGVuZ3RoID4gMSBhbmQgb25seSB0aGUgZmlyc3QgZWxlbWVudCB3aWxsIGJlIHVzZWR0aGUgY29uZGl0aW9uIGhhcyBsZW5ndGggPiAxIGFuZCBvbmx5IHRoZSBmaXJzdCBlbGVtZW50IHdpbGwgYmUgdXNlZHRoZSBjb25kaXRpb24gaGFzIGxlbmd0aCA+IDEgYW5kIG9ubHkgdGhlIGZpcnN0IGVsZW1lbnQgd2lsbCBiZSB1c2VkXG4ifQ== -->
-<pre><code>the condition has length &gt; 1 and only the first element will be usedthe condition has length &gt; 1 and only the first element will be usedthe condition has length &gt; 1 and only the first element will be used</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiRG93bmxvYWRpbmcgR2l0SHViIHJlcG8gUlRDR0EvUlRDR0FAbWFzdGVyXG5mcm9tIFVSTCBodHRwczovL2FwaS5naXRodWIuY29tL3JlcG9zL1JUQ0dBL1JUQ0dBL3ppcGJhbGwvbWFzdGVyXG5JbnN0YWxsaW5nIFJUQ0dBXG4nL3Vzci9saWIvUi9iaW4vUicgLS1uby1zaXRlLWZpbGUgLS1uby1lbnZpcm9uIC0tbm8tc2F2ZSAtLW5vLXJlc3RvcmUgLS1xdWlldCBDTUQgYnVpbGQgIFxcXG4gICcvdG1wL1J0bXBEMHdMWWUvZGV2dG9vbHMxN2Q2NzE2NzJjMDIvUlRDR0EtUlRDR0EtYTg3MGFiYycgLS1uby1yZXNhdmUtZGF0YSAtLW5vLW1hbnVhbCBcbiJ9 -->
+<pre><code>Downloading GitHub repo RTCGA/RTCGA@master
+from URL https://api.github.com/repos/RTCGA/RTCGA/zipball/master
+Installing RTCGA
+'/usr/lib/R/bin/R' --no-site-file --no-environ --no-save --no-restore --quiet CMD build  \
+  '/tmp/RtmpD0wLYe/devtools17d671672c02/RTCGA-RTCGA-a870abc' --no-resave-data --no-manual </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiKiBjaGVja2luZyBmb3IgZmlsZSDigJgvdG1wL1J0bXBEMHdMWWUvZGV2dG9vbHMxN2Q2NzE2NzJjMDIvUlRDR0EtUlRDR0EtYTg3MGFiYy9ERVNDUklQVElPTuKAmSAuLi4gT0tcbiogcHJlcGFyaW5nIOKAmFJUQ0dB4oCZOlxuKiBjaGVja2luZyBERVNDUklQVElPTiBtZXRhLWluZm9ybWF0aW9uIC4uLiBPS1xuKiBpbnN0YWxsaW5nIHRoZSBwYWNrYWdlIHRvIGJ1aWxkIHZpZ25ldHRlc1xuKiBjcmVhdGluZyB2aWduZXR0ZXMgLi4uIEVSUk9SXG4ifQ== -->
+<pre><code>* checking for file ‘/tmp/RtmpD0wLYe/devtools17d671672c02/RTCGA-RTCGA-a870abc/DESCRIPTION’ ... OK
+* preparing ‘RTCGA’:
+* checking DESCRIPTION meta-information ... OK
+* installing the package to build vignettes
+* creating vignettes ... ERROR</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3I6IENvbW1hbmQgZmFpbGVkICgxKVxuIn0= -->
+<pre><code>Error: Command failed (1)</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiU2VnbWVudGF0aW9uIGZhdWx0IChjb3JlIGR1bXBlZClcbkVycm9yOiBwcm9jZXNzaW5nIHZpZ25ldHRlICdSVENHQV9Xb3JrZmxvdy5SbWQnIGZhaWxlZCB3aXRoIGRpYWdub3N0aWNzOlxucGFuZG9jIGRvY3VtZW50IGNvbnZlcnNpb24gZmFpbGVkIHdpdGggZXJyb3IgMTM5XG5JbiBhZGRpdGlvbjogV2FybmluZyBtZXNzYWdlOlxuSW4gdG9vbHM6OmJ1aWxkVmlnbmV0dGVzKGRpciA9IFwiLlwiLCB0YW5nbGUgPSBUUlVFKSA6XG4gIEZpbGVzIG5hbWVkIGFzIHZpZ25ldHRlcyBidXQgd2l0aCBubyByZWNvZ25pemVkIHZpZ25ldHRlIGVuZ2luZTpcbiAgIOKAmHZpZ25ldHRlcy9EYXRhX0Rvd25sb2FkLlJtZOKAmVxuICAg4oCYdmlnbmV0dGVzL1Zpc3VhbGl6YXRpb25zLlJtZOKAmVxuKElzIGEgVmlnbmV0dGVCdWlsZGVyIGZpZWxkIG1pc3Npbmc/KVxuRXhlY3V0aW9uIGhhbHRlZFxuIn0= -->
+<pre><code>Segmentation fault (core dumped)
+Error: processing vignette 'RTCGA_Workflow.Rmd' failed with diagnostics:
+pandoc document conversion failed with error 139
+In addition: Warning message:
+In tools::buildVignettes(dir = &quot;.&quot;, tangle = TRUE) :
+  Files named as vignettes but with no recognized vignette engine:
+   ‘vignettes/Data_Download.Rmd’
+   ‘vignettes/Visualizations.Rmd’
+(Is a VignetteBuilder field missing?)
+Execution halted</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkFkZGluZyBjbGluaWNhbCBkYXRhIHRvIG9taWNzIGRhdGEiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KSSdtIGluc3RhbGxpbmcgZGlyZWN0bHkgZnJvbSBHaXRodWIgaW5zdGVhZCBvZiB1c2luZyBCaW9jb25kdWN0b3IsIGJlY2F1c2U6DQotIEknbSB1c2luZyBSc3R1ZGlvIG9uIGEgc2VydmVyLCBhbmQgSSBjb3VsZCBub3QgbWFuYWdlIHRvIHByb3Blcmx5IGluc3RhbGwgYmlvY29uZHVjdG9yIHRoZXJlDQotIFRoZSAoc3RhYmxlKSBHaXRodWIgdmVyc2lvbiBpcyB0aGUgbW9zdCByZWNlbnQNCmBgYHtyfQ0KaWYgKCFyZXF1aXJlKGRldnRvb2xzKSkgew0KICAgIGluc3RhbGwucGFja2FnZXMoImRldnRvb2xzIiwgbGliID0gIi4uL3ItcGFja2FnZXMiKQ0KICAgIHJlcXVpcmUoZGV2dG9vbHMpDQp9DQoNCmRpc2Vhc2VzIDwtIGMoIkJSQ0EiLCAiR0JNIiwgIk9WIikNCiMgb21pY3MgPC0gYygibVJOQSIsICJtaVJOQVNlcSIsICJtZXRoeWxhdGlvbiIsICJDTlYiKQ0Kb21pY3MgPC0gYygibVJOQSIsICJtaVJOQVNlcSIsICJDTlYiKQ0KDQpgYGANCg0KYGBge3J9DQphIDwtIHBhc3RlKCJSVENHQS9SVENHQS4iLCBjKCJjbGluaWNhbCIsIG9taWNzKSwgc2VwID0gIiIpDQpiIDwtIHBhc3RlKGEsICIuMjAxNjAxMjgiLCBzZXAgPSAiIikNCnBja2dzIDwtIGMoYSxiKQ0KIyBjKHBhc3RlKCJSVENHQS9SVENHQS4iLCBjKCJjbGluaWNhbCIsIG9taWNzKSkpDQojIHBhc3RlKCwgIi4yMDE2MDEyOCIpDQpmb3IocCBpbiBwY2tncyl7DQogICMgcHJpbnQocCkNCiAgIyBpbnN0YWxsX2dpdGh1YihwLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBsaWIgPSAiLi4vci1wYWNrYWdlcyIpDQogIGxpYnJhcnkoc3Vic3RyKHAsIDcsIG5jaGFyKHApKSwgY2hhcmFjdGVyLm9ubHkgPSBUUlVFKQ0KICAjIHByaW50KCIgIikNCiAgfQ0Kc291cmNlKCJSVENHQV9mdW5jdGlvbnMuUiIpDQpgYGANCg0KYGBge3J9DQpBZGRTdXJ2RGF0YVRvT21pY3MoZGlzZWFzZXMsIG9taWNzLCBzYXZlID0gRkFMU0UpDQoNCmZvcihkaXMgaW4gZGlzZWFzZXMpew0KICBhc3NpZ24oc3ByaW50ZigiJXNfaW50ZXIiLCBkaXMpLCBGaW5kSW50ZXJzZWN0aW9uKG9taWNzLCBkaXMsIHNhdmUgPSBGQUxTRSkpDQp9DQoNCmBgYA==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiQWRkaW5nIGNsaW5pY2FsIGRhdGEgdG8gb21pY3MgZGF0YSIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQpJJ20gaW5zdGFsbGluZyBkaXJlY3RseSBmcm9tIEdpdGh1YiBpbnN0ZWFkIG9mIHVzaW5nIEJpb2NvbmR1Y3RvciwgYmVjYXVzZToKLSBJJ20gdXNpbmcgUnN0dWRpbyBvbiBhIHNlcnZlciwgYW5kIEkgY291bGQgbm90IG1hbmFnZSB0byBwcm9wZXJseSBpbnN0YWxsIGJpb2NvbmR1Y3RvciB0aGVyZQotIFRoZSAoc3RhYmxlKSBHaXRodWIgdmVyc2lvbiBpcyB0aGUgbW9zdCByZWNlbnQKYGBge3J9CiMgVGhpcyB3b3JrcyBub3csIGRpZG4ndCB3b3JrIGJlZm9yZSB3aXRoIHRoZSBvbGQgdmVyc2lvbiBvZiBSc3R1ZGlvLi4uCnNvdXJjZSgiaHR0cDovL2Jpb2NvbmR1Y3Rvci5vcmcvYmlvY0xpdGUuUiIpCmlmICghcmVxdWlyZShkZXZ0b29scykpIHsKICAgIGluc3RhbGwucGFja2FnZXMoImRldnRvb2xzIiwgbGliID0gIi4uL3ItcGFja2FnZXMiKQogICAgcmVxdWlyZShkZXZ0b29scykKfQoKZGlzZWFzZXMgPC0gYygiQlJDQSIsICJHQk0iLCAiT1YiKQojIG9taWNzIDwtIGMoIm1STkEiLCAibWlSTkFTZXEiLCAibWV0aHlsYXRpb24iLCAiQ05WIikKb21pY3MgPC0gYygibVJOQSIsICJtaVJOQVNlcSIsICJDTlYiKQoKYGBgCgpgYGB7cn0KYSA8LSBwYXN0ZSgiUlRDR0EuIiwgYygiY2xpbmljYWwiLCBvbWljcyksIHNlcCA9ICIiKQpiIDwtIHBhc3RlKGEsICIuMjAxNjAxMjgiLCBzZXAgPSAiIikKcGNrZ3MgPC0gYyhhLGIpCiMgYyhwYXN0ZSgiUlRDR0EvUlRDR0EuIiwgYygiY2xpbmljYWwiLCBvbWljcykpKQojIHBhc3RlKCwgIi4yMDE2MDEyOCIpCiMgaW5zdGFsbC5wYWNrYWdlcygicnRvb2xzIiwgbGliID0gIi4uL3ItcGFja2FnZXMiKQppbnN0YWxsX2dpdGh1YigiUlRDR0EvUlRDR0EiLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBsaWIgPSAiLi4vci1wYWNrYWdlcyIpCgojIGluc3RhbGxfZ2l0aHViKCJCaW9jb25kdWN0b3ItbWlycm9yL0Fubm90YXRpb25IdWIiLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBsaWIgPSAiLi4vci1wYWNrYWdlcyIpCiMgaW5zdGFsbF9naXRodWIoIkJpb2NvbmR1Y3Rvci9FeHBlcmltZW50SHViIiwgYnVpbGRfdmlnbmV0dGVzID0gVFJVRSwgbGliID0gIi4uL3ItcGFja2FnZXMiKQpmb3IocCBpbiBwY2tnc1s1OjhdKXsKICAjIHByaW50KHApCiAgIyBpbnN0YWxsX2dpdGh1YihwLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBsaWIgPSAiLi4vci1wYWNrYWdlcyIpCiAgYmlvY0xpdGUocCwgbGliID0gIi4uL3ItcGFja2FnZXMiKQogIGxpYnJhcnkocCwgY2hhcmFjdGVyLm9ubHkgPSBUUlVFKQogICMgcHJpbnQoIiAiKQogIH0Kc291cmNlKCJSVENHQV9mdW5jdGlvbnMuUiIpCmBgYAoKYGBge3J9CkFkZFN1cnZEYXRhVG9PbWljcyhkaXNlYXNlcywgb21pY3MsIHNhdmUgPSBGQUxTRSkKCmZvcihkaXMgaW4gZGlzZWFzZXMpewogIGFzc2lnbihzcHJpbnRmKCIlc19pbnRlciIsIGRpcyksIEZpbmRJbnRlcnNlY3Rpb24ob21pY3MsIGRpcywgc2F2ZSA9IEZBTFNFKSkKfQoKYGBg</div>
 
 
 
