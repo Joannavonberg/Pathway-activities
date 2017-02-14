@@ -12,11 +12,6 @@ if (!require(devtools)) {
     install.packages("devtools", lib = "../r-packages")
     require(devtools)
 }
-
-diseases <- c("BRCA", "GBM", "OV")
-# omics <- c("mRNA", "miRNASeq", "methylation", "CNV")
-omics <- c("mRNA", "miRNASeq", "CNV")
-
 ```
 
 ```{r}
@@ -26,25 +21,73 @@ pckgs <- c(a,b)
 # c(paste("RTCGA/RTCGA.", c("clinical", omics)))
 # paste(, ".20160128")
 # install.packages("rtools", lib = "../r-packages")
-install_github("RTCGA/RTCGA", build_vignettes = TRUE, lib = "../r-packages")
+# install_github("RTCGA/RTCGA", build_vignettes = TRUE, lib = "../r-packages")
 
 # install_github("Bioconductor-mirror/AnnotationHub", build_vignettes = TRUE, lib = "../r-packages")
 # install_github("Bioconductor/ExperimentHub", build_vignettes = TRUE, lib = "../r-packages")
-for(p in pckgs[5:8]){
+setRepositories(ind = c(1:6, 8))
+biocLite("RTCGA", lib = "../r-packages")
+library("RTCGA")
+installTCGA()
+```
+This works, but this doesn't:
+```{r}
+for(p in pckgs){
   # print(p)
   # install_github(p, build_vignettes = TRUE, lib = "../r-packages")
-  biocLite(p, lib = "../r-packages")
-  library(p, character.only = TRUE)
+  # biocLite(p)#, lib = "../r-packages")
+  # installTCGA(p)
+  library(p, character.only = TRUE, lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
   # print(" ")
   }
-source("RTCGA_functions.R")
+```
+The Rstudio on the server is updated to 3.3.2. I am now trying to install the necessary packages by using the command line R instead of the Rstudio server (after manually removing all installed packages using the command line):
+```{r}
+setRepositories(ind = c(1:6, 8))
+source("http://bioconductor.org/biocLite.R")
+biocLite("RTCGA")
+library("RTCGA")
+installTCGA()
 ```
 
+Nope. On command line R (R --vanilla):
+
 ```{r}
+options(repos='http://cran.rstudio.com/')
+install.packages("devtools")
+library("devtools")#, lib = "../R/x86_64-pc-linux-gnu-library/3.3")
+# install_github("RTCGA/RTCGA", build_vignettes = TRUE)
+# install_github("RTCGA/RTCGA.clinical.20160128", build_vignettes = TRUE)
+install_github("RTCGA/RTCGA.clinical.20160128", build_vignettes = TRUE, force = TRUE)
+diseases <- c("BRCA", "GBM", "OV")
+# omics <- c("mRNA", "miRNASeq", "methylation", "CNV")
+omics <- c("mRNA", "miRNASeq", "CNV")
+a <- paste("RTCGA.", c("clinical", omics), sep = "")
+b <- paste(a, ".20160128", sep = "")
+pckgs <- c(a,b)
+
+for(p in pckgs){
+  install_github(paste("RTCGA/", p, sep = ""), build_vignettes = TRUE, force = TRUE)
+}
+```
+And then, on the server:
+```{r}
+for(p in pckgs){
+  library(p, character.only = TRUE, lib = "../R/x86_64-pc-linux-gnu-library/3.3")
+}
+```
+It worked! I can now use the most recent data from the RTCGA packages.
+
+```{r}
+source("RTCGA_functions.R")
+# for now, only looking at diseases for which I want to predict 'days to death'
+diseases <- c("BRCA", "GBM", "OV")
+omics <- c("mRNA", "miRNASeq", "CNV")
+
 AddSurvDataToOmics(diseases, omics, save = FALSE)
 
+# calculate the intersection (which patients have data for all omics types)
 for(dis in diseases){
   assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = FALSE))
 }
-
 ```
