@@ -4,6 +4,30 @@ output: html_notebook
 ---
 
 ```{r}
-test <- AddSurvDataToOmics("PRAD", "mRNA")
+# test <- AddSurvDataToOmics("PRAD", "mRNA")
+# clin <- PRAD.clinical.20160128
+plot(as.factor(clin$patient.bone_scan_results))
+```
+As can be seen in the plot above, most patients bone scan results are normal. The balance of class labels would not be good in this case, so we will look at another class label.
+```{r}
+plot(as.factor(clin$patient.biochemical_recurrence))
+```
+In this case as well, the class labels are unbalanced. Let's look at what the ratio is in both cases:
+```{r}
+# library(plyr)
+count(as.factor(clin$patient.bone_scan_results))
 ```
 
+```{r}
+count(as.factor(clin$patient.biochemical_recurrence))
+```
+
+For bone scan results, even if we would also consider 'abnormal (not related to prostate cancer)' the ratio bad/good class labels would be 25/215 = 0.116. For biochemical recurrence, this is 58/372 = 0.156 which is only slightly better.
+
+```{r}
+plot(as.factor(clin$patient.diagnostic_mri_results.diagnostic_mri_result))
+```
+```{r}
+count(as.factor(clin$patient.diagnostic_mri_results.diagnostic_mri_result))
+```
+Here, the ratio bad/good would be 24/54 = 0.444 which is better than both other options, but the total number of patients would only be 78 here (instead of the original 499).
