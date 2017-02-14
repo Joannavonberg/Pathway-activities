@@ -7,8 +7,6 @@
 AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
   for(dis in diseases){
     # preparing clinical data
-    # if(!exists("clin")){#}, where = .GlobalEnv)){
-    # print(dis)
     if(exists(sprintf("%s.%s.20160128", dis, "clinical"))){
       clin <<- get(sprintf("%s.%s.20160128", dis, "clinical"), envir = .GlobalEnv)
       print(sprintf("For %s, clinical data from 2016-01-28 will be used", dis))
@@ -17,10 +15,8 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
       clin <<- get(sprintf("%s.%s", dis, "clinical"), envir = .GlobalEnv)
       print(sprintf("Clinical data from 2016-01-28 is not available, will use old data for %s.", dis))
     }
-    # print(clin[1:4, 1:4])
     patients_clin <<- toupper(clin$patient.bcr_patient_barcode)
     rownames(clin) <<- patients_clin
-    # }
     for(om in omics){
       string <- sprintf("%s.%s.20160128", dis, om)
       if(exists(string)){
