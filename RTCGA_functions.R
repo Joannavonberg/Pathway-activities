@@ -7,7 +7,8 @@
 AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
   for(dis in diseases){
     # preparing clinical data
-    if(exists(sprintf("%s.%s.20160128", dis, "clinical"))){
+    new_data <- exists(sprintf("%s.%s.20160128", dis, "clinical"))
+    if(new_data){
       clin <<- get(sprintf("%s.%s.20160128", dis, "clinical"), envir = .GlobalEnv)
       print(sprintf("For %s, clinical data from 2016-01-28 will be used", dis))
     }
@@ -22,7 +23,7 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
       if(exists(string)){
         df <- get(string)
       }
-      else {
+      else{
         string <- sprintf("%s.%s", dis, om)
         if(exists(string)){
           df <- get(string)
@@ -31,13 +32,13 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
       }
       dis_om <- sprintf("%s_%s", dis, om)
       if(om == "CNV"){
-        assign(dis_om, AddSurvivalData(df, clin, om), envir = .GlobalEnv)
+        assign(dis_om, AddSurvivalData(df, clin, om, dis == "PRAD"), envir = .GlobalEnv)
       }
       else{
         if(rownames(df)[1] == 1){
           rownames(df) <- toupper(df$bcr_patient_barcode)
         }
-        assign(dis_om, AddSurvivalData(df, clin, om), envir = .GlobalEnv)
+        assign(dis_om, AddSurvivalData(df, clin, om, dis == "PRAD"), envir = .GlobalEnv)
       }
       if(save){
         writeFile(get(dis_om), dis_om)
@@ -53,7 +54,7 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
 # and returns:
 # - a dataframe like the original omic input, with extra columns patient_id, days_to_death and days_to_last_followup
 # NB. It is not specific to any disease
-AddSurvivalData <- function(omics, clin, om){
+AddSurvivalData <- function(omics, clin, om, prad){
   if(om == "CNV"){
     patients_omics <- substr(omics$Sample, 1, 12)
   }
@@ -65,16 +66,21 @@ AddSurvivalData <- function(omics, clin, om){
   
   patients <- rownames(clin)[merge_patients]
   # hier ergens iets van: hee, als dit PRAD is dan doe iets met het weefseltype, anders:
-  days_to_death <- clin$patient.days_to_death[merge_patients]
-  names(days_to_death) <- patients
-  days_to_last_followup <- clin$patient.days_to_last_followup[merge_patients]
-  names(days_to_last_followup) <- patients
-
-  omics$days_to_death <- rep(-1, nrow(omics))
-  omics$days_to_last_followup <- rep(-1, nrow(omics))
-  for (patient in patients){
-    omics$days_to_death[omics$patient_id == patient] <- days_to_death[patient]
-    omics$days_to_last_followup[omics$patient_id == patient] <- days_to_last_followup[patient]
+  if(prad){
+    tissue <- 0
+  }
+  else{
+    days_to_death <- clin$patient.days_to_death[merge_patients]
+    names(days_to_death) <- patients
+    days_to_last_followup <- clin$patient.days_to_last_followup[merge_patients]
+    names(days_to_last_followup) <- patients
+    
+    omics$days_to_death <- rep(-1, nrow(omics))
+    omics$days_to_last_followup <- rep(-1, nrow(omics))
+    for (patient in patients){
+      omics$days_to_death[omics$patient_id == patient] <- days_to_death[patient]
+      omics$days_to_last_followup[omics$patient_id == patient] <- days_to_last_followup[patient]
+    }
   }
   return(omics)
 }
