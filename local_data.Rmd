@@ -1,0 +1,22 @@
+---
+title: "Looking at the local data (from the B-IT)"
+output: html_notebook
+---
+
+*15-02-2017*
+
+The dataset for GBM that I have downloaded, using the RTCGA package, contains a low number of samples. Ashar mentioned that there is also local GBM data (which is older, so I should be careful), and I could compare the patients in both datasets (look at the overlap).
+```{r}
+load("/home/abidata/datasets/patients/GBM_TCGA/clinical.rda")
+local_data_clin <- clinical
+new_data_clin <- GBM.clinical
+local_data_clin$patient <- toupper(local_data_clin$patient)
+new_data_clin$patient.bcr_patient_barcode <- toupper(new_data_clin$patient.bcr_patient_barcode)
+# View(clinical)
+inter <- local_data_clin$patient[local_data_clin$patient %in% new_data_clin$patient.bcr_patient_barcode]
+```
+```{r}
+length(inter)
+nrow(local_data_clin)
+nrow(new_data_clin)
+```
