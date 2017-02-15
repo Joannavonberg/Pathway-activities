@@ -84,27 +84,28 @@ for(dis in diseases){
 ```
 14-02-2017:
 
+* Since it is not clear what I should use as class label for the PRAD patients, and most samples in the dataset I have downloaded are healthy, Ashar and I have decided to not look at PRAD for now.
 * Check CNV data
     + CNV data is not so straightforward to analyze, it needs to be converted to a patients x genes matrix in some way
-    + Read the original paper
+    + **Read the original paper**
 * Check on TCGA website if the GBM datasets are correctly loaded using RTCGA, since the number of patients seems low
     + this is happening correctly
+    + **Read original paper that came out with the GBM patients.**
 * **Check out the local data (abidata)**
 * **Check intersections of these datasets.**
-* **Read original paper that came out with the GBM patients.**
-* **Think about adding mirRNA instead of m(i)RNASeq (Seq has a Poisson distribution instead of normal distribution). It is probably better to add the micro-array data (so not Seq) because it is easier to model.**
+* **Think about adding m(i)rRNA instead of m(i)RNASeq (Seq has a Poisson distribution instead of normal distribution). It is probably better to add the micro-array data (so not Seq) because it is easier to model.**
 * **Think about using SQL to make faster connections between clinical data and omics data for a specific patient**
 * Add methylation data.
-    + First install methylation packages:
 ```{r}
+# First install methylation packages:
 library("RTCGA", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 library("RTCGA.clinical", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 library("RTCGA.clinical.20160128", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 library("RTCGA.methylation", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 library("RTCGA.methylation.20160128", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 ```
-    + Then process the methylation data:
 ```{r}
+# Then process the methylation data:
 AddSurvDataToOmics(diseases, "methylation", save = FALSE)
 for(dis in diseases){
   assign(sprintf("%s_inter", dis), FindIntersection(c(omics, "methylation"), dis, save = FALSE))
