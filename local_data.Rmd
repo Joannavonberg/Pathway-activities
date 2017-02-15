@@ -12,11 +12,60 @@ local_data_clin <- clinical
 new_data_clin <- GBM.clinical
 local_data_clin$patient <- toupper(local_data_clin$patient)
 new_data_clin$patient.bcr_patient_barcode <- toupper(new_data_clin$patient.bcr_patient_barcode)
-# View(clinical)
+# View(clinical) 
 inter <- local_data_clin$patient[local_data_clin$patient %in% new_data_clin$patient.bcr_patient_barcode]
 ```
 ```{r}
 length(inter)
 nrow(local_data_clin)
 nrow(new_data_clin)
+```
+
+Maybe a Venn diagram is easier for visualization:
+```{r}
+# install.packages("VennDiagram", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
+# library("VennDiagram", lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
+clin_venn <- venn.diagram(list(local = local_data_clin$patient, new = new_data_clin$patient.bcr_patient_barcode), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(clin_venn, recording = FALSE)
+```
+The overlap is very large, but this is only clinical data. The problem with low number of samples was predominantly a problem in miRNASeq and mRNA data:
+
+```{r}
+load("/home/abidata/datasets/patients/GBM_TCGA/miRNAExpression.rda")
+load("/home/abidata/datasets/patients/GBM_TCGA/mRNAExpression.rda")
+```
+
+```{r}
+mRNA_new <- toupper(GBM_mRNA$patient_id)
+mRNA_old <- toupper(colnames(mRNA))
+mRNA_venn <- venn.diagram(list(local = mRNA_old, new = mRNA_new), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(mRNA_venn, recording = FALSE)
+```
+
+Hmm, the intersection is zero. Check if the barcode's are in the same format:
+```{r}
+mRNA_new[1:4]
+mRNA_old[1:4]
+```
+
+It's not in the same format. Read more about how these barcodes are constructed.
+I found this image on https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode: 
+![](creating_barcodes.png)
+See also this site: https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tissue-source-site-codes
+It seems like the 'CS' patients are from a Lower Grade Glioma study (GBMLGG), which is not the same as GMB (I think...). Check this.
+https://cancergenome.nih.gov/cancersselected/lowergradeglioma: there are indications that LGG is a precursor to the more debilitating GBM.
+
+For miRNA:
+```{r}
+miRNA_new <- toupper(GBM_miRNASeq$patient_id)
+miRNA_old <- toupper(colnames(miRNA))
+miRNA_venn <- venn.diagram(list(local = miRNA_old, new = miRNA_new), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(miRNA_venn, recording = FALSE)
+```
+```{r}
+miRNA_new[1:4]
+miRNA_old[1:4]
 ```
