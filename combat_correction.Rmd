@@ -1,0 +1,93 @@
+---
+title: "Correcting batch effects"
+output: html_notebook
+---
+
+```{r}
+source("https://bioconductor.org/biocLite.R")
+biocLite("sva", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
+# library(sva)
+```
+The 'sva' package can be used to apply the ComBat method to correct batch effects in micro array and sequencing data. I will first do the tutorial to learn how to use the package.
+```{r}
+# biocLite("bladderbatch")
+# biocLite("limma")
+library(sva)
+library(limma)
+library(bladderbatch)
+data(bladderdata)
+```
+```{r}
+pheno = pData(bladderEset)
+edata = exprs(bladderEset)
+mod = model.matrix(~as.factor(cancer), data=pheno)
+mod0 = model.matrix(~1, data = pheno)
+```
+```{r}
+n.sv <- num.sv(edata, mod, method="leek")
+svobj <- sva(edata, mod, mod0, n.sv= n.sv)
+```
+```{r}
+pValues <- f.pvalue(edata, mod, mod0)
+qValues <- p.adjust(pValues, method="BH")
+hist(pValues, cex = 0.1)
+```
+Now, correcting the P- and Q-values for surrogate variables:
+```{r}
+modSv <- cbind(mod, svobj$sv)
+mod0Sv <- cbind(mod0, svobj$sv)
+pValuesSv <- f.pvalue(edata, modSv, mod0Sv)
+qValuesSv <- p.adjust(pValuesSv, method="BH")
+hist(pValuesSv, cex = 0.1)
+hist(qValuesSv, cex = 0.1)
+```
+Using the *limma* package to adjust for surrogate variables:
+```{r}
+fit <- lmFit(edata, modSv)
+```
+Finally, using the *ComBat* function to adjust for known batches (this is what I actually need):
+```{r}
+batch <- pheno$batch
+modcombat <- model.matrix(~1, data = pheno)
+combat_edata <- ComBat(dat=edata, batch=batch, mod=modcombat, par.prior = TRUE)
+```
+This returns an expression matrix that has been adjusted for batch. Significance analysis:
+```{r}
+pValuesCombat <- f.pvalue(combat_edata, mod, mod0)
+qValuesCombat <- p.adjust(pValuesCombat, method="BH")
+plot(density(pValuesCombat))
+```
+
+Now, applying this technique to the RTCGA data:
+```{r}
+diseases <- c("BRCA", "GBM", "OV")
+omics <- c("mRNA", "miRNASeq", "CNV", "methylation")
+for(d in diseases){
+  for(o in omics){
+    tryCatch(
+      assign(sprintf("%s_%s", d, o), read.table(sprintf("%s_%s_with_survival_data.txt", d, o))),
+      finally = next
+    )
+  }
+}
+```
+The problem is I need to supply batch ID's for all the samples, and I'm not sure what I can use as batch ID. I thought about using the MBatch package because it is specified for TCGA data, but also for this you need to supply a batch ID, and it is not documented well (at least the installation isn't).
+
+https://confluence.broadinstitute.org/display/GDAC/FAQ: the plate identifier that is used in the TCGA barcode can effectively be used as batch ID. Therefore I need to add a column "batch_ID" to the different omic dataframes.
+
+20-02-2017:
+
+* Extract batch ID from patient barcode in AddSurvDataToOmics()
+    + Done:
+```{r}
+plot(as.factor(BRCA_mRNA$batch_id))
+```
+* Write a function to correct batch effects
+* Correct the data:
+```{r}
+test_mat <- t(as.matrix(BRCA_mRNA[]))
+test_pheno <- 
+CorrectBatch()
+```
+* Since the ComBat() function wants a matrix with samples on the columns and genes on the rows, it is probably a better idea to implement this in the AddSurvDataToOmics() function
+* Save the corrected data (with different file names from the uncorrected data)
