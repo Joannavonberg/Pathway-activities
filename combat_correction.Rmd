@@ -90,4 +90,7 @@ test_pheno <-
 CorrectBatch()
 ```
 * Since the ComBat() function wants a matrix with samples on the columns and genes on the rows, it is probably a better idea to implement this in the AddSurvDataToOmics() function
+    + potential problem 1: there are two variables of interest for prediction
+    + potential problem 2: both are continuous, not categorical
+    + **Read more about the ComBat() function**
 * Save the corrected data (with different file names from the uncorrected data)
