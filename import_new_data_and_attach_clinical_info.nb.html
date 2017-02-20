@@ -175,81 +175,59 @@ $(document).ready(function () {
 <p>I’m installing directly from Github instead of using Bioconductor, because: - I’m using Rstudio on a server, and I could not manage to properly install bioconductor there - The (stable) Github version is the most recent</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUaGlzIHdvcmtzIG5vdywgZGlkbid0IHdvcmsgYmVmb3JlIHdpdGggdGhlIG9sZCB2ZXJzaW9uIG9mIFJzdHVkaW8uLi5cbnNvdXJjZShcImh0dHA6Ly9iaW9jb25kdWN0b3Iub3JnL2Jpb2NMaXRlLlJcIilcbmlmICghcmVxdWlyZShkZXZ0b29scykpIHtcbiAgICBpbnN0YWxsLnBhY2thZ2VzKFwiZGV2dG9vbHNcIiwgbGliID0gXCIuLi9yLXBhY2thZ2VzXCIpXG4gICAgcmVxdWlyZShkZXZ0b29scylcbn1cbmBgYCJ9 -->
-<pre class="r"><code># This works now, didn't work before with the old version of Rstudio...
-source(&quot;http://bioconductor.org/biocLite.R&quot;)
-if (!require(devtools)) {
-    install.packages(&quot;devtools&quot;, lib = &quot;../r-packages&quot;)
-    require(devtools)
-}</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKFwiaHR0cDovL2Jpb2NvbmR1Y3Rvci5vcmcvYmlvY0xpdGUuUlwiKVxuXG5gYGAifQ== -->
+<pre class="r"><code>source(&quot;http://bioconductor.org/biocLite.R&quot;)
+</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiQmlvY29uZHVjdG9yIHZlcnNpb24gMy40IChCaW9jSW5zdGFsbGVyIDEuMjQuMCksID9iaW9jTGl0ZSBmb3IgaGVscFxuIn0= -->
+<pre><code>Bioconductor version 3.4 (BiocInstaller 1.24.0), ?biocLite for help</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYSA8LSBwYXN0ZShcIlJUQ0dBLlwiLCBjKFwiY2xpbmljYWxcIiwgb21pY3MpLCBzZXAgPSBcIlwiKVxuYiA8LSBwYXN0ZShhLCBcIi4yMDE2MDEyOFwiLCBzZXAgPSBcIlwiKVxucGNrZ3MgPC0gYyhhLGIpXG5cbnNldFJlcG9zaXRvcmllcyhpbmQgPSBjKDE6NiwgOCkpXG5iaW9jTGl0ZShcIlJUQ0dBXCIsIGxpYiA9IFwiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zXCIpXG5saWJyYXJ5KFwiUlRDR0FcIilcbmBgYCJ9 -->
-<pre class="r"><code>a &lt;- paste(&quot;RTCGA.&quot;, c(&quot;clinical&quot;, omics), sep = &quot;&quot;)
-b &lt;- paste(a, &quot;.20160128&quot;, sep = &quot;&quot;)
-pckgs &lt;- c(a,b)
-
-setRepositories(ind = c(1:6, 8))
-biocLite(&quot;RTCGA&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
-library(&quot;RTCGA&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYSA8LSBwYXN0ZShcIlJUQ0dBLlwiLCBjKFwiY2xpbmljYWxcIiwgb21pY3MpLCBzZXAgPSBcIlwiKVxuYGBgIn0= -->
+<pre class="r"><code>a &lt;- paste(&quot;RTCGA.&quot;, c(&quot;clinical&quot;, omics), sep = &quot;&quot;)</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gZXZhbChleHByLCBlbnZpciwgZW5jbG9zKSA6IG9iamVjdCAnb21pY3MnIG5vdCBmb3VuZFxuIn0= -->
+<pre><code>Error in eval(expr, envir, enclos) : object 'omics' not found</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>That works, but this doesn’t:</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKHAgaW4gcGNrZ3Mpe1xuICAjIGluc3RhbGxfZ2l0aHViKHAsIGJ1aWxkX3ZpZ25ldHRlcyA9IFRSVUUsIGxpYiA9IFwiLi4vci1wYWNrYWdlc1wiKVxuICAjIGJpb2NMaXRlKHApIywgbGliID0gXCIuLi9yLXBhY2thZ2VzXCIpXG4gICMgaW5zdGFsbFRDR0EocClcbiAgbGlicmFyeShwLCBjaGFyYWN0ZXIub25seSA9IFRSVUUsIGxpYi5sb2MgPSBcIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuM1wiKVxuICB9XG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKHAgaW4gcGNrZ3Mpe1xuICAjIGluc3RhbGxfZ2l0aHViKHAsIGJ1aWxkX3ZpZ25ldHRlcyA9IFRSVUUsIGxpYiA9IFwiLi4vci1wYWNrYWdlc1wiKVxuICAjIGJpb2NMaXRlKHApIywgbGliID0gXCIuLi9yLXBhY2thZ2VzXCIpXG4gICMgaW5zdGFsbFRDR0EocClcbiAgbGlicmFyeShwLCBjaGFyYWN0ZXIub25seSA9IFRSVUUsIGxpYi5sb2MgPSBcIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuM1wiKVxuICB9XG5cbmBgYCJ9 -->
 <pre class="r"><code>for(p in pckgs){
   # install_github(p, build_vignettes = TRUE, lib = &quot;../r-packages&quot;)
   # biocLite(p)#, lib = &quot;../r-packages&quot;)
   # installTCGA(p)
   library(p, character.only = TRUE, lib.loc = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
-  }</code></pre>
+  }
+</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gbGlicmFyeShwLCBjaGFyYWN0ZXIub25seSA9IFRSVUUsIGxpYi5sb2MgPSBcIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuM1wiKSA6IFxuICB0aGVyZSBpcyBubyBwYWNrYWdlIGNhbGxlZCDigJhSVENHQS5taVJOQeKAmVxuIn0= -->
+<pre><code>Error in library(p, character.only = TRUE, lib.loc = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;) : 
+  there is no package called ‘RTCGA.miRNA’</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>The Rstudio on the server is updated to 3.3.2. I am now trying to install the necessary packages by using the command line R instead of the Rstudio server (after manually removing all installed packages using the command line):</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0UmVwb3NpdG9yaWVzKGluZCA9IGMoMTo2LCA4KSlcbnNvdXJjZShcImh0dHA6Ly9iaW9jb25kdWN0b3Iub3JnL2Jpb2NMaXRlLlJcIilcbmJpb2NMaXRlKFwiUlRDR0FcIilcbmxpYnJhcnkoXCJSVENHQVwiKVxuaW5zdGFsbFRDR0EoKVxuYGBgIn0= -->
-<pre class="r"><code>setRepositories(ind = c(1:6, 8))
-source(&quot;http://bioconductor.org/biocLite.R&quot;)
-biocLite(&quot;RTCGA&quot;)
-library(&quot;RTCGA&quot;)
-installTCGA()</code></pre>
-<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>Nope. On command line R (R --vanilla):</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBJIGNhbid0IHVzZSBodHRwcyBvbiB0aGUgUi1zZXJ2ZXJcbm9wdGlvbnMocmVwb3M9J2h0dHA6Ly9jcmFuLnJzdHVkaW8uY29tLycpXG5pbnN0YWxsLnBhY2thZ2VzKFwiZGV2dG9vbHNcIilcbmxpYnJhcnkoXCJkZXZ0b29sc1wiKSMsIGxpYiA9IFwiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zXCIpXG5pbnN0YWxsX2dpdGh1YihcIlJUQ0dBL1JUQ0dBXCIsIGJ1aWxkX3ZpZ25ldHRlcyA9IFRSVUUpXG5cbmRpc2Vhc2VzIDwtIGMoXCJCUkNBXCIsIFwiR0JNXCIsIFwiT1ZcIilcbm9taWNzIDwtIGMoXCJtUk5BXCIsIFwibWlSTkFTZXFcIiwgXCJDTlZcIilcbmEgPC0gcGFzdGUoXCJSVENHQS5cIiwgYyhcImNsaW5pY2FsXCIsIG9taWNzKSwgc2VwID0gXCJcIilcbmIgPC0gcGFzdGUoYSwgXCIuMjAxNjAxMjhcIiwgc2VwID0gXCJcIilcbnBja2dzIDwtIGMoYSxiKVxuXG5mb3IocCBpbiBwY2tncyl7XG4gIGluc3RhbGxfZ2l0aHViKHBhc3RlKFwiUlRDR0EvXCIsIHAsIHNlcCA9IFwiXCIpLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBmb3JjZSA9IFRSVUUpXG59XG5gYGAifQ== -->
-<pre class="r"><code># I can't use https on the R-server
-options(repos='http://cran.rstudio.com/')
-install.packages(&quot;devtools&quot;)
-library(&quot;devtools&quot;)#, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
-install_github(&quot;RTCGA/RTCGA&quot;, build_vignettes = TRUE)
-
-diseases &lt;- c(&quot;BRCA&quot;, &quot;GBM&quot;, &quot;OV&quot;)
-omics &lt;- c(&quot;mRNA&quot;, &quot;miRNASeq&quot;, &quot;CNV&quot;)
-a &lt;- paste(&quot;RTCGA.&quot;, c(&quot;clinical&quot;, omics), sep = &quot;&quot;)
-b &lt;- paste(a, &quot;.20160128&quot;, sep = &quot;&quot;)
-pckgs &lt;- c(a,b)
-
-for(p in pckgs){
-  install_github(paste(&quot;RTCGA/&quot;, p, sep = &quot;&quot;), build_vignettes = TRUE, force = TRUE)
-}</code></pre>
-<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>And then, on the server:</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKHAgaW4gcGNrZ3Mpe1xuICBsaWJyYXJ5KHAsIGNoYXJhY3Rlci5vbmx5ID0gVFJVRSwgbGliID0gXCIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjNcIilcbn1cbmBgYCJ9 -->
-<pre class="r"><code>for(p in pckgs){
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShcIlJUQ0dBXCIsIGxpYi5sb2MgPSBcIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuM1wiKVxuZm9yKHAgaW4gcGNrZ3Mpe1xuICBsaWJyYXJ5KHAsIGNoYXJhY3Rlci5vbmx5ID0gVFJVRSwgbGliID0gXCIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjNcIilcbn1cbmBgYCJ9 -->
+<pre class="r"><code>library(&quot;RTCGA&quot;, lib.loc = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
+for(p in pckgs){
   library(p, character.only = TRUE, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
 }</code></pre>
 <!-- rnb-source-end -->
@@ -258,20 +236,24 @@ for(p in pckgs){
 <p>It worked! I can now use the most recent data from the RTCGA packages.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKFwiUlRDR0FfZnVuY3Rpb25zLlJcIilcblxuIyBmb3Igbm93LCBvbmx5IGxvb2tpbmcgYXQgZGlzZWFzZXMgZm9yIHdoaWNoIEkgd2FudCB0byBwcmVkaWN0ICdkYXlzIHRvIGRlYXRoJ1xuZGlzZWFzZXMgPC0gYyhcIkJSQ0FcIiwgXCJHQk1cIiwgXCJPVlwiKVxub21pY3MgPC0gYyhcIm1STkFcIiwgXCJtaVJOQVNlcVwiLCBcIkNOVlwiKVxuXG5BZGRTdXJ2RGF0YVRvT21pY3MoZGlzZWFzZXMsIG9taWNzLCBzYXZlID0gRkFMU0UpXG5cbiMgY2FsY3VsYXRlIHRoZSBpbnRlcnNlY3Rpb24gKHdoaWNoIHBhdGllbnRzIGhhdmUgZGF0YSBmb3IgYWxsIG9taWNzIHR5cGVzKVxuZm9yKGRpcyBpbiBkaXNlYXNlcyl7XG4gIGFzc2lnbihzcHJpbnRmKFwiJXNfaW50ZXJcIiwgZGlzKSwgRmluZEludGVyc2VjdGlvbihvbWljcywgZGlzLCBzYXZlID0gRkFMU0UpKVxufVxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKFwiUlRDR0FfZnVuY3Rpb25zLlJcIilcbkFkZFN1cnZEYXRhVG9PbWljcyhkaXNlYXNlcywgb21pY3MsIHNhdmUgPSBGQUxTRSlcbmBgYCJ9 -->
 <pre class="r"><code>source(&quot;RTCGA_functions.R&quot;)
-
-# for now, only looking at diseases for which I want to predict 'days to death'
-diseases &lt;- c(&quot;BRCA&quot;, &quot;GBM&quot;, &quot;OV&quot;)
-omics &lt;- c(&quot;mRNA&quot;, &quot;miRNASeq&quot;, &quot;CNV&quot;)
-
-AddSurvDataToOmics(diseases, omics, save = FALSE)
-
-# calculate the intersection (which patients have data for all omics types)
+AddSurvDataToOmics(diseases, omics, save = FALSE)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiRm9yIEJSQ0EsIGNsaW5pY2FsIGRhdGEgZnJvbSAyMDE2LTAxLTI4IHdpbGwgYmUgdXNlZFwiXG5bMV0gXCJDbGluaWNhbCBkYXRhIGZyb20gMjAxNi0wMS0yOCBpcyBub3QgYXZhaWxhYmxlLCB3aWxsIHVzZSBvbGQgZGF0YSBmb3IgR0JNLlwiXG5bMV0gXCJGb3IgT1YsIGNsaW5pY2FsIGRhdGEgZnJvbSAyMDE2LTAxLTI4IHdpbGwgYmUgdXNlZFwiXG4ifQ== -->
+<pre><code>[1] &quot;For BRCA, clinical data from 2016-01-28 will be used&quot;
+[1] &quot;Clinical data from 2016-01-28 is not available, will use old data for GBM.&quot;
+[1] &quot;For OV, clinical data from 2016-01-28 will be used&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBjYWxjdWxhdGUgdGhlIGludGVyc2VjdGlvbiAod2hpY2ggcGF0aWVudHMgaGF2ZSBkYXRhIGZvciBhbGwgb21pY3MgdHlwZXMpXG5mb3IoZGlzIGluIGRpc2Vhc2VzKXtcbiAgYXNzaWduKHNwcmludGYoXCIlc19pbnRlclwiLCBkaXMpLCBGaW5kSW50ZXJzZWN0aW9uKG9taWNzLCBkaXMsIHNhdmUgPSBGQUxTRSkpXG59XG5gYGAifQ== -->
+<pre class="r"><code># calculate the intersection (which patients have data for all omics types)
 for(dis in diseases){
   assign(sprintf(&quot;%s_inter&quot;, dis), FindIntersection(omics, dis, save = FALSE))
 }</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGhlIGNvbmRpdGlvbiBoYXMgbGVuZ3RoID4gMSBhbmQgb25seSB0aGUgZmlyc3QgZWxlbWVudCB3aWxsIGJlIHVzZWR0aGUgY29uZGl0aW9uIGhhcyBsZW5ndGggPiAxIGFuZCBvbmx5IHRoZSBmaXJzdCBlbGVtZW50IHdpbGwgYmUgdXNlZHRoZSBjb25kaXRpb24gaGFzIGxlbmd0aCA+IDEgYW5kIG9ubHkgdGhlIGZpcnN0IGVsZW1lbnQgd2lsbCBiZSB1c2VkXG4ifQ== -->
+<pre><code>the condition has length &gt; 1 and only the first element will be usedthe condition has length &gt; 1 and only the first element will be usedthe condition has length &gt; 1 and only the first element will be used</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>14-02-2017:</p>
@@ -287,70 +269,35 @@ for(dis in diseases){
 <li>this is happening correctly</li>
 <li><strong>Read original paper that came out with the GBM patients.</strong></li>
 </ul></li>
-<li><strong>Check out the local data (abidata)</strong></li>
-<li><strong>Check intersections of these datasets.</strong></li>
-<li><strong>Think about adding m(i)rRNA instead of m(i)RNASeq (Seq has a Poisson distribution instead of normal distribution). It is probably better to add the micro-array data (so not Seq) because it is easier to model.</strong></li>
+<li>Check out the local data (abidata)
+<ul>
+<li>The lengths of the intersections are as follows: 172 patients for BRCA, 274 patients for GBM, 435 for OV</li>
+</ul></li>
+<li>Check intersections of these datasets.</li>
+<li>Think about adding m(i)rRNA instead of m(i)RNASeq (Seq has a Poisson distribution instead of normal distribution). It is probably better to add the micro-array data (so not Seq) because it is easier to model.
+<ul>
+<li>The local data is micro array, on TCGA only Seq data is available for miRNA</li>
+</ul></li>
 <li><strong>Think about using SQL to make faster connections between clinical data and omics data for a specific patient</strong></li>
 <li>Add methylation data.</li>
 </ul>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGaXJzdCBpbnN0YWxsIG1ldGh5bGF0aW9uIHBhY2thZ2VzOlxubGlicmFyeShcIlJUQ0dBXCIsIGxpYiA9IFwiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zXCIpXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGaXJzdCBpbnN0YWxsIG1ldGh5bGF0aW9uIHBhY2thZ2VzOlxubGlicmFyeShcIlJUQ0dBXCIsIGxpYiA9IFwiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zXCIpXG5saWJyYXJ5KFwiUlRDR0EuY2xpbmljYWxcIiwgbGliID0gXCIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjNcIilcbmxpYnJhcnkoXCJSVENHQS5jbGluaWNhbC4yMDE2MDEyOFwiLCBsaWIgPSBcIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuM1wiKVxubGlicmFyeShcIlJUQ0dBLm1ldGh5bGF0aW9uXCIsIGxpYiA9IFwiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zXCIpXG5saWJyYXJ5KFwiUlRDR0EubWV0aHlsYXRpb24uMjAxNjAxMjhcIiwgbGliID0gXCIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjNcIilcbmBgYCJ9 -->
 <pre class="r"><code># First install methylation packages:
-library(&quot;RTCGA&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiV2VsY29tZSB0byB0aGUgUlRDR0EgKHZlcnNpb246IDEuNS4xKS5cbiJ9 -->
-<pre><code>Welcome to the RTCGA (version: 1.5.1).</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShcIlJUQ0dBLmNsaW5pY2FsXCIsIGxpYiA9IFwiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zXCIpXG5saWJyYXJ5KFwiUlRDR0EuY2xpbmljYWwuMjAxNjAxMjhcIiwgbGliID0gXCIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjNcIilcbmBgYCJ9 -->
-<pre class="r"><code>library(&quot;RTCGA.clinical&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
-library(&quot;RTCGA.clinical.20160128&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBFeHBlcmltZW50SHViXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IEJpb2NHZW5lcmljc1xuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBwYXJhbGxlbFxuXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYQmlvY0dlbmVyaWNz4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0cyBhcmUgbWFza2VkIGZyb20g4oCYcGFja2FnZTpwYXJhbGxlbOKAmTpcblxuICAgIGNsdXN0ZXJBcHBseSwgY2x1c3RlckFwcGx5TEIsIGNsdXN0ZXJDYWxsLCBjbHVzdGVyRXZhbFEsIGNsdXN0ZXJFeHBvcnQsIGNsdXN0ZXJNYXAsXG4gICAgcGFyQXBwbHksIHBhckNhcHBseSwgcGFyTGFwcGx5LCBwYXJMYXBwbHlMQiwgcGFyUmFwcGx5LCBwYXJTYXBwbHksIHBhclNhcHBseUxCXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0cyBhcmUgbWFza2VkIGZyb20g4oCYcGFja2FnZTpzdGF0c+KAmTpcblxuICAgIElRUiwgbWFkLCB4dGFic1xuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6YmFzZeKAmTpcblxuICAgIGFueUR1cGxpY2F0ZWQsIGFwcGVuZCwgYXMuZGF0YS5mcmFtZSwgY2JpbmQsIGNvbG5hbWVzLCBkby5jYWxsLCBkdXBsaWNhdGVkLCBldmFsLFxuICAgIGV2YWxxLCBGaWx0ZXIsIEZpbmQsIGdldCwgZ3JlcCwgZ3JlcGwsIGludGVyc2VjdCwgaXMudW5zb3J0ZWQsIGxhcHBseSwgbGVuZ3RocywgTWFwLFxuICAgIG1hcHBseSwgbWF0Y2gsIG1nZXQsIG9yZGVyLCBwYXN0ZSwgcG1heCwgcG1heC5pbnQsIHBtaW4sIHBtaW4uaW50LCBQb3NpdGlvbiwgcmFuayxcbiAgICByYmluZCwgUmVkdWNlLCByb3duYW1lcywgc2FwcGx5LCBzZXRkaWZmLCBzb3J0LCB0YWJsZSwgdGFwcGx5LCB1bmlvbiwgdW5pcXVlLCB1bnNwbGl0LFxuICAgIHdoaWNoLCB3aGljaC5tYXgsIHdoaWNoLm1pblxuXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IEFubm90YXRpb25IdWJcbiJ9 -->
-<pre><code>Loading required package: ExperimentHub
-Loading required package: BiocGenerics
-Loading required package: parallel
-
-Attaching package: ‘BiocGenerics’
-
-The following objects are masked from ‘package:parallel’:
-
-    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ, clusterExport, clusterMap,
-    parApply, parCapply, parLapply, parLapplyLB, parRapply, parSapply, parSapplyLB
-
-The following objects are masked from ‘package:stats’:
-
-    IQR, mad, xtabs
-
-The following objects are masked from ‘package:base’:
-
-    anyDuplicated, append, as.data.frame, cbind, colnames, do.call, duplicated, eval,
-    evalq, Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply, lengths, Map,
-    mapply, match, mget, order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
-    rbind, Reduce, rownames, sapply, setdiff, sort, table, tapply, union, unique, unsplit,
-    which, which.max, which.min
-
-Loading required package: AnnotationHub</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShcIlJUQ0dBLm1ldGh5bGF0aW9uXCIsIGxpYiA9IFwiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zXCIpXG5saWJyYXJ5KFwiUlRDR0EubWV0aHlsYXRpb24uMjAxNjAxMjhcIiwgbGliID0gXCIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjNcIilcbmBgYCJ9 -->
-<pre class="r"><code>library(&quot;RTCGA.methylation&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
+library(&quot;RTCGA&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
+library(&quot;RTCGA.clinical&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
+library(&quot;RTCGA.clinical.20160128&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
+library(&quot;RTCGA.methylation&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)
 library(&quot;RTCGA.methylation.20160128&quot;, lib = &quot;../R/x86_64-pc-linux-gnu-library/3.3&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUaGVuIHByb2Nlc3MgdGhlIG1ldGh5bGF0aW9uIGRhdGE6XG5BZGRTdXJ2RGF0YVRvT21pY3MoZGlzZWFzZXMsIFwibWV0aHlsYXRpb25cIiwgc2F2ZSA9IEZBTFNFKVxuYGBgIn0= -->
-<pre class="r"><code># Then process the methylation data:
-AddSurvDataToOmics(diseases, &quot;methylation&quot;, save = FALSE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiRm9yIEJSQ0EsIGNsaW5pY2FsIGRhdGEgZnJvbSAyMDE2LTAxLTI4IHdpbGwgYmUgdXNlZFwiXG5bMV0gXCJDbGluaWNhbCBkYXRhIGZyb20gMjAxNi0wMS0yOCBpcyBub3QgYXZhaWxhYmxlLCB3aWxsIHVzZSBvbGQgZGF0YSBmb3IgR0JNLlwiXG5bMV0gXCJGb3IgT1YsIGNsaW5pY2FsIGRhdGEgZnJvbSAyMDE2LTAxLTI4IHdpbGwgYmUgdXNlZFwiXG4ifQ== -->
-<pre><code>[1] &quot;For BRCA, clinical data from 2016-01-28 will be used&quot;
-[1] &quot;Clinical data from 2016-01-28 is not available, will use old data for GBM.&quot;
-[1] &quot;For OV, clinical data from 2016-01-28 will be used&quot;</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGRpcyBpbiBkaXNlYXNlcyl7XG4gIGFzc2lnbihzcHJpbnRmKFwiJXNfaW50ZXJcIiwgZGlzKSwgRmluZEludGVyc2VjdGlvbihjKG9taWNzLCBcIm1ldGh5bGF0aW9uXCIpLCBkaXMsIHNhdmUgPSBGQUxTRSkpXG59XG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGRpcyBpbiBkaXNlYXNlcyl7XG4gIGFzc2lnbihzcHJpbnRmKFwiJXNfaW50ZXJcIiwgZGlzKSwgRmluZEludGVyc2VjdGlvbihjKG9taWNzLCBcIm1ldGh5bGF0aW9uXCIpLCBkaXMsIHNhdmUgPSBGQUxTRSkpXG59XG5cbmBgYCJ9 -->
 <pre class="r"><code>for(dis in diseases){
   assign(sprintf(&quot;%s_inter&quot;, dis), FindIntersection(c(omics, &quot;methylation&quot;), dis, save = FALSE))
-}</code></pre>
+}
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-output-begin eyJkYXRhIjoidGhlIGNvbmRpdGlvbiBoYXMgbGVuZ3RoID4gMSBhbmQgb25seSB0aGUgZmlyc3QgZWxlbWVudCB3aWxsIGJlIHVzZWR0aGUgY29uZGl0aW9uIGhhcyBsZW5ndGggPiAxIGFuZCBvbmx5IHRoZSBmaXJzdCBlbGVtZW50IHdpbGwgYmUgdXNlZHRoZSBjb25kaXRpb24gaGFzIGxlbmd0aCA+IDEgYW5kIG9ubHkgdGhlIGZpcnN0IGVsZW1lbnQgd2lsbCBiZSB1c2VkXG4ifQ== -->
 <pre><code>the condition has length &gt; 1 and only the first element will be usedthe condition has length &gt; 1 and only the first element will be usedthe condition has length &gt; 1 and only the first element will be used</code></pre>
@@ -359,7 +306,7 @@ AddSurvDataToOmics(diseases, &quot;methylation&quot;, save = FALSE)</code></pre>
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiQWRkaW5nIGNsaW5pY2FsIGRhdGEgdG8gb21pY3MgZGF0YSIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQpJJ20gaW5zdGFsbGluZyBkaXJlY3RseSBmcm9tIEdpdGh1YiBpbnN0ZWFkIG9mIHVzaW5nIEJpb2NvbmR1Y3RvciwgYmVjYXVzZToKLSBJJ20gdXNpbmcgUnN0dWRpbyBvbiBhIHNlcnZlciwgYW5kIEkgY291bGQgbm90IG1hbmFnZSB0byBwcm9wZXJseSBpbnN0YWxsIGJpb2NvbmR1Y3RvciB0aGVyZQotIFRoZSAoc3RhYmxlKSBHaXRodWIgdmVyc2lvbiBpcyB0aGUgbW9zdCByZWNlbnQKYGBge3J9CiMgVGhpcyB3b3JrcyBub3csIGRpZG4ndCB3b3JrIGJlZm9yZSB3aXRoIHRoZSBvbGQgdmVyc2lvbiBvZiBSc3R1ZGlvLi4uCnNvdXJjZSgiaHR0cDovL2Jpb2NvbmR1Y3Rvci5vcmcvYmlvY0xpdGUuUiIpCmlmICghcmVxdWlyZShkZXZ0b29scykpIHsKICAgIGluc3RhbGwucGFja2FnZXMoImRldnRvb2xzIiwgbGliID0gIi4uL3ItcGFja2FnZXMiKQogICAgcmVxdWlyZShkZXZ0b29scykKfQpgYGAKCmBgYHtyfQphIDwtIHBhc3RlKCJSVENHQS4iLCBjKCJjbGluaWNhbCIsIG9taWNzKSwgc2VwID0gIiIpCmIgPC0gcGFzdGUoYSwgIi4yMDE2MDEyOCIsIHNlcCA9ICIiKQpwY2tncyA8LSBjKGEsYikKCnNldFJlcG9zaXRvcmllcyhpbmQgPSBjKDE6NiwgOCkpCmJpb2NMaXRlKCJSVENHQSIsIGxpYiA9ICIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjMiKQpsaWJyYXJ5KCJSVENHQSIpCmBgYApUaGF0IHdvcmtzLCBidXQgdGhpcyBkb2Vzbid0OgpgYGB7cn0KZm9yKHAgaW4gcGNrZ3MpewogICMgaW5zdGFsbF9naXRodWIocCwgYnVpbGRfdmlnbmV0dGVzID0gVFJVRSwgbGliID0gIi4uL3ItcGFja2FnZXMiKQogICMgYmlvY0xpdGUocCkjLCBsaWIgPSAiLi4vci1wYWNrYWdlcyIpCiAgIyBpbnN0YWxsVENHQShwKQogIGxpYnJhcnkocCwgY2hhcmFjdGVyLm9ubHkgPSBUUlVFLCBsaWIubG9jID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCiAgfQpgYGAKVGhlIFJzdHVkaW8gb24gdGhlIHNlcnZlciBpcyB1cGRhdGVkIHRvIDMuMy4yLiBJIGFtIG5vdyB0cnlpbmcgdG8gaW5zdGFsbCB0aGUgbmVjZXNzYXJ5IHBhY2thZ2VzIGJ5IHVzaW5nIHRoZSBjb21tYW5kIGxpbmUgUiBpbnN0ZWFkIG9mIHRoZSBSc3R1ZGlvIHNlcnZlciAoYWZ0ZXIgbWFudWFsbHkgcmVtb3ZpbmcgYWxsIGluc3RhbGxlZCBwYWNrYWdlcyB1c2luZyB0aGUgY29tbWFuZCBsaW5lKToKYGBge3J9CnNldFJlcG9zaXRvcmllcyhpbmQgPSBjKDE6NiwgOCkpCnNvdXJjZSgiaHR0cDovL2Jpb2NvbmR1Y3Rvci5vcmcvYmlvY0xpdGUuUiIpCmJpb2NMaXRlKCJSVENHQSIpCmxpYnJhcnkoIlJUQ0dBIikKaW5zdGFsbFRDR0EoKQpgYGAKCk5vcGUuIE9uIGNvbW1hbmQgbGluZSBSIChSIFwtXC12YW5pbGxhKToKCmBgYHtyfQojIEkgY2FuJ3QgdXNlIGh0dHBzIG9uIHRoZSBSLXNlcnZlcgpvcHRpb25zKHJlcG9zPSdodHRwOi8vY3Jhbi5yc3R1ZGlvLmNvbS8nKQppbnN0YWxsLnBhY2thZ2VzKCJkZXZ0b29scyIpCmxpYnJhcnkoImRldnRvb2xzIikjLCBsaWIgPSAiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zIikKaW5zdGFsbF9naXRodWIoIlJUQ0dBL1JUQ0dBIiwgYnVpbGRfdmlnbmV0dGVzID0gVFJVRSkKCmRpc2Vhc2VzIDwtIGMoIkJSQ0EiLCAiR0JNIiwgIk9WIikKb21pY3MgPC0gYygibVJOQSIsICJtaVJOQVNlcSIsICJDTlYiKQphIDwtIHBhc3RlKCJSVENHQS4iLCBjKCJjbGluaWNhbCIsIG9taWNzKSwgc2VwID0gIiIpCmIgPC0gcGFzdGUoYSwgIi4yMDE2MDEyOCIsIHNlcCA9ICIiKQpwY2tncyA8LSBjKGEsYikKCmZvcihwIGluIHBja2dzKXsKICBpbnN0YWxsX2dpdGh1YihwYXN0ZSgiUlRDR0EvIiwgcCwgc2VwID0gIiIpLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBmb3JjZSA9IFRSVUUpCn0KYGBgCkFuZCB0aGVuLCBvbiB0aGUgc2VydmVyOgpgYGB7cn0KZm9yKHAgaW4gcGNrZ3MpewogIGxpYnJhcnkocCwgY2hhcmFjdGVyLm9ubHkgPSBUUlVFLCBsaWIgPSAiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zIikKfQpgYGAKSXQgd29ya2VkISBJIGNhbiBub3cgdXNlIHRoZSBtb3N0IHJlY2VudCBkYXRhIGZyb20gdGhlIFJUQ0dBIHBhY2thZ2VzLgoKYGBge3J9CnNvdXJjZSgiUlRDR0FfZnVuY3Rpb25zLlIiKQoKIyBmb3Igbm93LCBvbmx5IGxvb2tpbmcgYXQgZGlzZWFzZXMgZm9yIHdoaWNoIEkgd2FudCB0byBwcmVkaWN0ICdkYXlzIHRvIGRlYXRoJwpkaXNlYXNlcyA8LSBjKCJCUkNBIiwgIkdCTSIsICJPViIpCm9taWNzIDwtIGMoIm1STkEiLCAibWlSTkFTZXEiLCAiQ05WIikKCkFkZFN1cnZEYXRhVG9PbWljcyhkaXNlYXNlcywgb21pY3MsIHNhdmUgPSBGQUxTRSkKCiMgY2FsY3VsYXRlIHRoZSBpbnRlcnNlY3Rpb24gKHdoaWNoIHBhdGllbnRzIGhhdmUgZGF0YSBmb3IgYWxsIG9taWNzIHR5cGVzKQpmb3IoZGlzIGluIGRpc2Vhc2VzKXsKICBhc3NpZ24oc3ByaW50ZigiJXNfaW50ZXIiLCBkaXMpLCBGaW5kSW50ZXJzZWN0aW9uKG9taWNzLCBkaXMsIHNhdmUgPSBGQUxTRSkpCn0KYGBgCjE0LTAyLTIwMTc6CgoqIFNpbmNlIGl0IGlzIG5vdCBjbGVhciB3aGF0IEkgc2hvdWxkIHVzZSBhcyBjbGFzcyBsYWJlbCBmb3IgdGhlIFBSQUQgcGF0aWVudHMsIGFuZCBtb3N0IHNhbXBsZXMgaW4gdGhlIGRhdGFzZXQgSSBoYXZlIGRvd25sb2FkZWQgYXJlIGhlYWx0aHksIEFzaGFyIGFuZCBJIGhhdmUgZGVjaWRlZCB0byBub3QgbG9vayBhdCBQUkFEIGZvciBub3cuCiogQ2hlY2sgQ05WIGRhdGEKICAgICsgQ05WIGRhdGEgaXMgbm90IHNvIHN0cmFpZ2h0Zm9yd2FyZCB0byBhbmFseXplLCBpdCBuZWVkcyB0byBiZSBjb252ZXJ0ZWQgdG8gYSBwYXRpZW50cyB4IGdlbmVzIG1hdHJpeCBpbiBzb21lIHdheQogICAgKyAqKlJlYWQgdGhlIG9yaWdpbmFsIHBhcGVyKioKKiBDaGVjayBvbiBUQ0dBIHdlYnNpdGUgaWYgdGhlIEdCTSBkYXRhc2V0cyBhcmUgY29ycmVjdGx5IGxvYWRlZCB1c2luZyBSVENHQSwgc2luY2UgdGhlIG51bWJlciBvZiBwYXRpZW50cyBzZWVtcyBsb3cKICAgICsgdGhpcyBpcyBoYXBwZW5pbmcgY29ycmVjdGx5CiAgICArICoqUmVhZCBvcmlnaW5hbCBwYXBlciB0aGF0IGNhbWUgb3V0IHdpdGggdGhlIEdCTSBwYXRpZW50cy4qKgoqICoqQ2hlY2sgb3V0IHRoZSBsb2NhbCBkYXRhIChhYmlkYXRhKSoqCiogKipDaGVjayBpbnRlcnNlY3Rpb25zIG9mIHRoZXNlIGRhdGFzZXRzLioqCiogKipUaGluayBhYm91dCBhZGRpbmcgbShpKXJSTkEgaW5zdGVhZCBvZiBtKGkpUk5BU2VxIChTZXEgaGFzIGEgUG9pc3NvbiBkaXN0cmlidXRpb24gaW5zdGVhZCBvZiBub3JtYWwgZGlzdHJpYnV0aW9uKS4gSXQgaXMgcHJvYmFibHkgYmV0dGVyIHRvIGFkZCB0aGUgbWljcm8tYXJyYXkgZGF0YSAoc28gbm90IFNlcSkgYmVjYXVzZSBpdCBpcyBlYXNpZXIgdG8gbW9kZWwuKioKKiAqKlRoaW5rIGFib3V0IHVzaW5nIFNRTCB0byBtYWtlIGZhc3RlciBjb25uZWN0aW9ucyBiZXR3ZWVuIGNsaW5pY2FsIGRhdGEgYW5kIG9taWNzIGRhdGEgZm9yIGEgc3BlY2lmaWMgcGF0aWVudCoqCiogQWRkIG1ldGh5bGF0aW9uIGRhdGEuCmBgYHtyfQojIEZpcnN0IGluc3RhbGwgbWV0aHlsYXRpb24gcGFja2FnZXM6CmxpYnJhcnkoIlJUQ0dBIiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLmNsaW5pY2FsIiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLmNsaW5pY2FsLjIwMTYwMTI4IiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLm1ldGh5bGF0aW9uIiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLm1ldGh5bGF0aW9uLjIwMTYwMTI4IiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmBgYApgYGB7cn0KIyBUaGVuIHByb2Nlc3MgdGhlIG1ldGh5bGF0aW9uIGRhdGE6CkFkZFN1cnZEYXRhVG9PbWljcyhkaXNlYXNlcywgIm1ldGh5bGF0aW9uIiwgc2F2ZSA9IEZBTFNFKQpmb3IoZGlzIGluIGRpc2Vhc2VzKXsKICBhc3NpZ24oc3ByaW50ZigiJXNfaW50ZXIiLCBkaXMpLCBGaW5kSW50ZXJzZWN0aW9uKGMob21pY3MsICJtZXRoeWxhdGlvbiIpLCBkaXMsIHNhdmUgPSBGQUxTRSkpCn0KYGBgCgoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiQWRkaW5nIGNsaW5pY2FsIGRhdGEgdG8gb21pY3MgZGF0YSIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQpJJ20gaW5zdGFsbGluZyBkaXJlY3RseSBmcm9tIEdpdGh1YiBpbnN0ZWFkIG9mIHVzaW5nIEJpb2NvbmR1Y3RvciwgYmVjYXVzZToKLSBJJ20gdXNpbmcgUnN0dWRpbyBvbiBhIHNlcnZlciwgYW5kIEkgY291bGQgbm90IG1hbmFnZSB0byBwcm9wZXJseSBpbnN0YWxsIGJpb2NvbmR1Y3RvciB0aGVyZQotIFRoZSAoc3RhYmxlKSBHaXRodWIgdmVyc2lvbiBpcyB0aGUgbW9zdCByZWNlbnQKYGBge3J9CiMgVGhpcyB3b3JrcyBub3csIGRpZG4ndCB3b3JrIGJlZm9yZSB3aXRoIHRoZSBvbGQgdmVyc2lvbiBvZiBSc3R1ZGlvLi4uCnNvdXJjZSgiaHR0cDovL2Jpb2NvbmR1Y3Rvci5vcmcvYmlvY0xpdGUuUiIpCmlmICghcmVxdWlyZShkZXZ0b29scykpIHsKICAgIGluc3RhbGwucGFja2FnZXMoImRldnRvb2xzIiwgbGliID0gIi4uL3ItcGFja2FnZXMiKQogICAgcmVxdWlyZShkZXZ0b29scykKfQpgYGAKCmBgYHtyfQphIDwtIHBhc3RlKCJSVENHQS4iLCBjKCJjbGluaWNhbCIsIG9taWNzKSwgc2VwID0gIiIpCmIgPC0gcGFzdGUoYSwgIi4yMDE2MDEyOCIsIHNlcCA9ICIiKQpwY2tncyA8LSBjKGEsYikKCiMgc2V0UmVwb3NpdG9yaWVzKGluZCA9IGMoMTo2LCA4KSkKIyBiaW9jTGl0ZSgiUlRDR0EiLCBsaWIgPSAiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zIikKYGBgClRoYXQgd29ya3MsIGJ1dCB0aGlzIGRvZXNuJ3Q6CmBgYHtyfQpmb3IocCBpbiBwY2tncyl7CiAgIyBpbnN0YWxsX2dpdGh1YihwLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFLCBsaWIgPSAiLi4vci1wYWNrYWdlcyIpCiAgIyBiaW9jTGl0ZShwKSMsIGxpYiA9ICIuLi9yLXBhY2thZ2VzIikKICAjIGluc3RhbGxUQ0dBKHApCiAgbGlicmFyeShwLCBjaGFyYWN0ZXIub25seSA9IFRSVUUsIGxpYi5sb2MgPSAiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zIikKICB9CmBgYApUaGUgUnN0dWRpbyBvbiB0aGUgc2VydmVyIGlzIHVwZGF0ZWQgdG8gMy4zLjIuIEkgYW0gbm93IHRyeWluZyB0byBpbnN0YWxsIHRoZSBuZWNlc3NhcnkgcGFja2FnZXMgYnkgdXNpbmcgdGhlIGNvbW1hbmQgbGluZSBSIGluc3RlYWQgb2YgdGhlIFJzdHVkaW8gc2VydmVyIChhZnRlciBtYW51YWxseSByZW1vdmluZyBhbGwgaW5zdGFsbGVkIHBhY2thZ2VzIHVzaW5nIHRoZSBjb21tYW5kIGxpbmUpOgpgYGB7cn0Kc2V0UmVwb3NpdG9yaWVzKGluZCA9IGMoMTo2LCA4KSkKc291cmNlKCJodHRwOi8vYmlvY29uZHVjdG9yLm9yZy9iaW9jTGl0ZS5SIikKYmlvY0xpdGUoIlJUQ0dBIikKbGlicmFyeSgiUlRDR0EiKQppbnN0YWxsVENHQSgpCmBgYAoKTm9wZS4gT24gY29tbWFuZCBsaW5lIFIgKFIgXC1cLXZhbmlsbGEpOgoKYGBge3J9CiMgSSBjYW4ndCB1c2UgaHR0cHMgb24gdGhlIFItc2VydmVyCm9wdGlvbnMocmVwb3M9J2h0dHA6Ly9jcmFuLnJzdHVkaW8uY29tLycpCmluc3RhbGwucGFja2FnZXMoImRldnRvb2xzIikKbGlicmFyeSgiZGV2dG9vbHMiKSMsIGxpYiA9ICIuLi9SL3g4Nl82NC1wYy1saW51eC1nbnUtbGlicmFyeS8zLjMiKQppbnN0YWxsX2dpdGh1YigiUlRDR0EvUlRDR0EiLCBidWlsZF92aWduZXR0ZXMgPSBUUlVFKQoKZGlzZWFzZXMgPC0gYygiQlJDQSIsICJHQk0iLCAiT1YiKQpvbWljcyA8LSBjKCJtUk5BIiwgIm1pUk5BU2VxIiwgIkNOViIsICJtZXRoeWxhdGlvbiIpCmEgPC0gcGFzdGUoIlJUQ0dBLiIsIGMoImNsaW5pY2FsIiwgb21pY3MpLCBzZXAgPSAiIikKYiA8LSBwYXN0ZShhLCAiLjIwMTYwMTI4Iiwgc2VwID0gIiIpCnBja2dzIDwtIGMoYSxiKQoKZm9yKHAgaW4gcGNrZ3MpewogIGluc3RhbGxfZ2l0aHViKHBhc3RlKCJSVENHQS8iLCBwLCBzZXAgPSAiIiksIGJ1aWxkX3ZpZ25ldHRlcyA9IFRSVUUsIGZvcmNlID0gVFJVRSkKfQpgYGAKQW5kIHRoZW4sIG9uIHRoZSBzZXJ2ZXI6CmBgYHtyfQpsaWJyYXJ5KCJSVENHQSIsIGxpYi5sb2MgPSAiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zIikKZm9yKHAgaW4gcGNrZ3MpewogIGxpYnJhcnkocCwgY2hhcmFjdGVyLm9ubHkgPSBUUlVFLCBsaWIgPSAiLi4vUi94ODZfNjQtcGMtbGludXgtZ251LWxpYnJhcnkvMy4zIikKfQpgYGAKSXQgd29ya2VkISBJIGNhbiBub3cgdXNlIHRoZSBtb3N0IHJlY2VudCBkYXRhIGZyb20gdGhlIFJUQ0dBIHBhY2thZ2VzLgoKYGBge3J9CnNvdXJjZSgiUlRDR0FfZnVuY3Rpb25zLlIiKQoKQWRkU3VydkRhdGFUb09taWNzKGRpc2Vhc2VzLCBvbWljcywgc2F2ZSA9IEZBTFNFKQoKIyBjYWxjdWxhdGUgdGhlIGludGVyc2VjdGlvbiAod2hpY2ggcGF0aWVudHMgaGF2ZSBkYXRhIGZvciBhbGwgb21pY3MgdHlwZXMpCmZvcihkaXMgaW4gZGlzZWFzZXMpewogIGFzc2lnbihzcHJpbnRmKCIlc19pbnRlciIsIGRpcyksIEZpbmRJbnRlcnNlY3Rpb24ob21pY3MsIGRpcywgc2F2ZSA9IEZBTFNFKSkKfQpgYGAKMTQtMDItMjAxNzoKCiogU2luY2UgaXQgaXMgbm90IGNsZWFyIHdoYXQgSSBzaG91bGQgdXNlIGFzIGNsYXNzIGxhYmVsIGZvciB0aGUgUFJBRCBwYXRpZW50cywgYW5kIG1vc3Qgc2FtcGxlcyBpbiB0aGUgZGF0YXNldCBJIGhhdmUgZG93bmxvYWRlZCBhcmUgaGVhbHRoeSwgQXNoYXIgYW5kIEkgaGF2ZSBkZWNpZGVkIHRvIG5vdCBsb29rIGF0IFBSQUQgZm9yIG5vdy4KKiBDaGVjayBDTlYgZGF0YQogICAgKyBDTlYgZGF0YSBpcyBub3Qgc28gc3RyYWlnaHRmb3J3YXJkIHRvIGFuYWx5emUsIGl0IG5lZWRzIHRvIGJlIGNvbnZlcnRlZCB0byBhIHBhdGllbnRzIHggZ2VuZXMgbWF0cml4IGluIHNvbWUgd2F5CiAgICArICoqUmVhZCB0aGUgb3JpZ2luYWwgcGFwZXIqKgoqIENoZWNrIG9uIFRDR0Egd2Vic2l0ZSBpZiB0aGUgR0JNIGRhdGFzZXRzIGFyZSBjb3JyZWN0bHkgbG9hZGVkIHVzaW5nIFJUQ0dBLCBzaW5jZSB0aGUgbnVtYmVyIG9mIHBhdGllbnRzIHNlZW1zIGxvdwogICAgKyB0aGlzIGlzIGhhcHBlbmluZyBjb3JyZWN0bHkKICAgICsgKipSZWFkIG9yaWdpbmFsIHBhcGVyIHRoYXQgY2FtZSBvdXQgd2l0aCB0aGUgR0JNIHBhdGllbnRzLioqCiogQ2hlY2sgb3V0IHRoZSBsb2NhbCBkYXRhIChhYmlkYXRhKQogICAgKyBUaGUgbGVuZ3RocyBvZiB0aGUgaW50ZXJzZWN0aW9ucyBhcmUgYXMgZm9sbG93czogMTcyIHBhdGllbnRzIGZvciBCUkNBLCAyNzQgcGF0aWVudHMgZm9yIEdCTSwgNDM1IGZvciBPVgoqIENoZWNrIGludGVyc2VjdGlvbnMgb2YgdGhlc2UgZGF0YXNldHMuCiogVGhpbmsgYWJvdXQgYWRkaW5nIG0oaSlyUk5BIGluc3RlYWQgb2YgbShpKVJOQVNlcSAoU2VxIGhhcyBhIFBvaXNzb24gZGlzdHJpYnV0aW9uIGluc3RlYWQgb2Ygbm9ybWFsIGRpc3RyaWJ1dGlvbikuIEl0IGlzIHByb2JhYmx5IGJldHRlciB0byBhZGQgdGhlIG1pY3JvLWFycmF5IGRhdGEgKHNvIG5vdCBTZXEpIGJlY2F1c2UgaXQgaXMgZWFzaWVyIHRvIG1vZGVsLgogICAgKyBUaGUgbG9jYWwgZGF0YSBpcyBtaWNybyBhcnJheSwgb24gVENHQSBvbmx5IFNlcSBkYXRhIGlzIGF2YWlsYWJsZSBmb3IgbWlSTkEKKiAqKlRoaW5rIGFib3V0IHVzaW5nIFNRTCB0byBtYWtlIGZhc3RlciBjb25uZWN0aW9ucyBiZXR3ZWVuIGNsaW5pY2FsIGRhdGEgYW5kIG9taWNzIGRhdGEgZm9yIGEgc3BlY2lmaWMgcGF0aWVudCoqCiogQWRkIG1ldGh5bGF0aW9uIGRhdGEuCmBgYHtyfQojIEZpcnN0IGluc3RhbGwgbWV0aHlsYXRpb24gcGFja2FnZXM6CmxpYnJhcnkoIlJUQ0dBIiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLmNsaW5pY2FsIiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLmNsaW5pY2FsLjIwMTYwMTI4IiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLm1ldGh5bGF0aW9uIiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmxpYnJhcnkoIlJUQ0dBLm1ldGh5bGF0aW9uLjIwMTYwMTI4IiwgbGliID0gIi4uL1IveDg2XzY0LXBjLWxpbnV4LWdudS1saWJyYXJ5LzMuMyIpCmBgYApgYGB7cn0KIyBUaGVuIHByb2Nlc3MgdGhlIG1ldGh5bGF0aW9uIGRhdGE6CkFkZFN1cnZEYXRhVG9PbWljcyhkaXNlYXNlcywgb21pY3MsIHNhdmUgPSBUUlVFKQpmb3IoZGlzIGluIGRpc2Vhc2VzKXsKICBhc3NpZ24oc3ByaW50ZigiJXNfaW50ZXIiLCBkaXMpLCBGaW5kSW50ZXJzZWN0aW9uKGMob21pY3MsICJtZXRoeWxhdGlvbiIpLCBkaXMsIHNhdmUgPSBGQUxTRSkpCn0KYGBgCgoK</div>
 
 
 

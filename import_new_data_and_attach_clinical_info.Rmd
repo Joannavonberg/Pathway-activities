@@ -19,9 +19,8 @@ a <- paste("RTCGA.", c("clinical", omics), sep = "")
 b <- paste(a, ".20160128", sep = "")
 pckgs <- c(a,b)
 
-setRepositories(ind = c(1:6, 8))
-biocLite("RTCGA", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
-library("RTCGA")
+# setRepositories(ind = c(1:6, 8))
+# biocLite("RTCGA", lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 ```
 That works, but this doesn't:
 ```{r}
@@ -51,7 +50,7 @@ library("devtools")#, lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 install_github("RTCGA/RTCGA", build_vignettes = TRUE)
 
 diseases <- c("BRCA", "GBM", "OV")
-omics <- c("mRNA", "miRNASeq", "CNV")
+omics <- c("mRNA", "miRNASeq", "CNV", "methylation")
 a <- paste("RTCGA.", c("clinical", omics), sep = "")
 b <- paste(a, ".20160128", sep = "")
 pckgs <- c(a,b)
@@ -62,6 +61,7 @@ for(p in pckgs){
 ```
 And then, on the server:
 ```{r}
+library("RTCGA", lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
 for(p in pckgs){
   library(p, character.only = TRUE, lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 }
@@ -70,10 +70,6 @@ It worked! I can now use the most recent data from the RTCGA packages.
 
 ```{r}
 source("RTCGA_functions.R")
-
-# for now, only looking at diseases for which I want to predict 'days to death'
-diseases <- c("BRCA", "GBM", "OV")
-omics <- c("mRNA", "miRNASeq", "CNV")
 
 AddSurvDataToOmics(diseases, omics, save = FALSE)
 
@@ -91,9 +87,11 @@ for(dis in diseases){
 * Check on TCGA website if the GBM datasets are correctly loaded using RTCGA, since the number of patients seems low
     + this is happening correctly
     + **Read original paper that came out with the GBM patients.**
-* **Check out the local data (abidata)**
-* **Check intersections of these datasets.**
-* **Think about adding m(i)rRNA instead of m(i)RNASeq (Seq has a Poisson distribution instead of normal distribution). It is probably better to add the micro-array data (so not Seq) because it is easier to model.**
+* Check out the local data (abidata)
+    + The lengths of the intersections are as follows: 172 patients for BRCA, 274 patients for GBM, 435 for OV
+* Check intersections of these datasets.
+* Think about adding m(i)rRNA instead of m(i)RNASeq (Seq has a Poisson distribution instead of normal distribution). It is probably better to add the micro-array data (so not Seq) because it is easier to model.
+    + The local data is micro array, on TCGA only Seq data is available for miRNA
 * **Think about using SQL to make faster connections between clinical data and omics data for a specific patient**
 * Add methylation data.
 ```{r}
@@ -106,7 +104,7 @@ library("RTCGA.methylation.20160128", lib = "../R/x86_64-pc-linux-gnu-library/3.
 ```
 ```{r}
 # Then process the methylation data:
-AddSurvDataToOmics(diseases, "methylation", save = FALSE)
+AddSurvDataToOmics(diseases, omics, save = TRUE)
 for(dis in diseases){
   assign(sprintf("%s_inter", dis), FindIntersection(c(omics, "methylation"), dis, save = FALSE))
 }
