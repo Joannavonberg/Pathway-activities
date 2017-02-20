@@ -54,33 +54,30 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
 # and returns:
 # - a dataframe like the original omic input, with extra columns patient_id, days_to_death and days_to_last_followup
 # NB. It is not specific to any disease
-AddSurvivalData <- function(omics, clin, om, prad){
+AddSurvivalData <- function(omics, clin, om, prad = FALSE){
   if(om == "CNV"){
     patients_omics <- substr(omics$Sample, 1, 12)
+    batch_id <- substr(omics$Sample, 22, 25)
   }
   else{
     patients_omics <- substr(rownames(omics), 1, 12)
+    batch_id <- substr(rownames(omics), 22, 25)
   }
+  omics$batch_id <- batch_id
   omics$patient_id <- patients_omics
   merge_patients <- rownames(clin) %in% patients_omics
   
   patients <- rownames(clin)[merge_patients]
-  # hier ergens iets van: hee, als dit PRAD is dan doe iets met het weefseltype, anders:
-  if(prad){
-    tissue <- 0
-  }
-  else{
-    days_to_death <- clin$patient.days_to_death[merge_patients]
-    names(days_to_death) <- patients
-    days_to_last_followup <- clin$patient.days_to_last_followup[merge_patients]
-    names(days_to_last_followup) <- patients
-    
-    omics$days_to_death <- rep(-1, nrow(omics))
-    omics$days_to_last_followup <- rep(-1, nrow(omics))
-    for (patient in patients){
-      omics$days_to_death[omics$patient_id == patient] <- days_to_death[patient]
-      omics$days_to_last_followup[omics$patient_id == patient] <- days_to_last_followup[patient]
-    }
+  days_to_death <- clin$patient.days_to_death[merge_patients]
+  names(days_to_death) <- patients
+  days_to_last_followup <- clin$patient.days_to_last_followup[merge_patients]
+  names(days_to_last_followup) <- patients
+  
+  omics$days_to_death <- rep(-1, nrow(omics))
+  omics$days_to_last_followup <- rep(-1, nrow(omics))
+  for (patient in patients){
+    omics$days_to_death[omics$patient_id == patient] <- days_to_death[patient]
+    omics$days_to_last_followup[omics$patient_id == patient] <- days_to_last_followup[patient]
   }
   return(omics)
 }
@@ -115,4 +112,11 @@ FindIntersection <- function(omics, disease, save = FALSE){
     write(unique(res), sprintf("%s_%s_patients.txt", disease, paste0(omics, collapse = "-")))
   }
   return(unique(res))
+}
+
+CorrectBatch <- function(mat, pheno, save = FALSE){
+  batch <- pheno$batch_id
+  modcombat <- model.matrix(~1, data = pheno)
+  corrected <- ComBat(dat=mat, batch=batch, mod=modcombat)
+  return(corrected)
 }
