@@ -6,19 +6,7 @@
 # and returns nothing, but creates a data-frame with survival data for each disease and omic data source combination
 AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
   for(dis in diseases){
-    # preparing clinical data
-    new_data <- exists(sprintf("%s.%s.20160128", dis, "clinical"))
-    if(new_data){
-      clin <<- get(sprintf("%s.%s.20160128", dis, "clinical"), envir = .GlobalEnv)
-      print(sprintf("For %s, clinical data from 2016-01-28 will be used", dis))
-    }
-    else{
-      clin <<- get(sprintf("%s.%s", dis, "clinical"), envir = .GlobalEnv)
-      print(sprintf("Clinical data from 2016-01-28 is not available, will use old data for %s.", dis))
-    }
-    patients_clin <<- toupper(clin$patient.bcr_patient_barcode)
-    rownames(clin) <<- patients_clin
-    for(om in omics){
+      for(om in omics){
       string <- sprintf("%s.%s.20160128", dis, om)
       if(exists(string)){
         df <- get(string)
@@ -31,20 +19,37 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
         else{next}
       }
       dis_om <- sprintf("%s_%s", dis, om)
-      if(om == "CNV"){
-        assign(dis_om, AddSurvivalData(df, clin, om, dis == "PRAD"), envir = .GlobalEnv)
+      if(om != "CNV" & rownames(df)[1] == 1){
+        rownames(df) <- toupper(df$bcr_patient_barcode)
       }
-      else{
-        if(rownames(df)[1] == 1){
-          rownames(df) <- toupper(df$bcr_patient_barcode)
-        }
-        assign(dis_om, AddSurvivalData(df, clin, om, dis == "PRAD"), envir = .GlobalEnv)
-      }
+      assign(dis_om, t(as.matrix(df)))
+      assign(sprintf("%s_pheno", dis_om), PhenoData(clin))
       if(save){
         writeFile(get(dis_om), dis_om)
       }
     }
   }
+}
+
+PhenoData <- function(pheno){
+  for(d in diseases){
+    # preparing clinical data
+    new_data <- exists(sprintf("%s.%s.20160128", dis, "clinical"))
+    if(new_data){
+      clin <<- get(sprintf("%s.%s.20160128", dis, "clinical"), envir = .GlobalEnv)
+      print(sprintf("For %s, clinical data from 2016-01-28 will be used", dis))
+    }
+    else{
+      clin <<- get(sprintf("%s.%s", dis, "clinical"), envir = .GlobalEnv)
+      print(sprintf("Clinical data from 2016-01-28 is not available, will use old data for %s.", dis))
+    }
+    barcodes_clin <<- toupper(clin$patient.bcr_patient_barcode)
+    rownames(clin) <<- patients_clin
+    patients_omics <- substr(rownames(omics), 1, 12)
+    batch_id <- substr(rownames(omics), 22, 25)
+  }
+# looks like:
+# barcode - batch_id - days_to_death - days_to_last_dinges
 }
 
 # the function AddSurvivalData wants as input: 
