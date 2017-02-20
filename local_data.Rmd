@@ -69,3 +69,28 @@ grid.draw(miRNA_venn, recording = FALSE)
 miRNA_new[1:4]
 miRNA_old[1:4]
 ```
+
+*16-02-2017*
+
+I think it is a good idea to use the local mRNA and miRNA data, together with the new clinical data. The newer clinical data might have updated "days to death" variables, and almost all patients from the old dataset are also in the newer (clinical) dataset.
+
+Oh wait, I just realized, I might be comparing mRNASeq data with mRNA (micro array) data and idem for miRNA. For miRNA, there is only Seq data available but the local data seems to be micro array data.
+
+I could combine the local miRNA data with the new clinical data. First see how large the overlap is:
+```{r}
+miRNA_clin <- toupper(new_data_clin$patient.bcr_patient_barcode)
+miRNA_old <- toupper(colnames(miRNA))
+miRNA_venn <- venn.diagram(list(local = miRNA_old, clin = miRNA_clin), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(miRNA_venn, recording = FALSE)
+```
+
+This looks good, almost all patients in the clinical dataset have (local) miRNA data.
+```{r}
+GBM_miRNA <- as.data.frame(t(miRNA))
+GBM_miRNA <- AddSurvivalData(GBM_miRNA, new_data_clin, "miRNA")
+GBM_mRNA <- as.data.frame(t(mRNA))
+GBM_mRNA <- AddSurvivalData(GBM_mRNA, new_data_clin, "mRNA")
+omics <- c("mRNA", "miRNA", "CNV", "methylation")
+GBM_inter <- FindIntersection(omics, "GBM", save = FALSE)
+```
