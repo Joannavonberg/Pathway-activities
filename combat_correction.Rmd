@@ -105,4 +105,11 @@ CorrectBatch()
 * Test new AddSurvivalDataToOmics() function:
 ```{r}
 AddSurvDataToOmics("BRCA", "mRNA")
+# cor <- CorrectBatch(BRCA_mRNA, BRCA_mRNA_patients, BRCA_pheno)
+```
+```{r}
+# install.packages("knitr")
+library(knitr)
+library(DBI)
+db <- dbConnect(RSQLite::SQLite(), dbname = "sql.sqlite")
 ```
