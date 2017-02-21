@@ -93,4 +93,16 @@ CorrectBatch()
     + potential problem 1: there are two variables of interest for prediction
     + potential problem 2: both are continuous, not categorical
     + **Read more about the ComBat() function**
+    + I was confused... The batch ID has to do with the samples of course, not with the patients
 * Save the corrected data (with different file names from the uncorrected data)
+
+21-2-2017:
+
+* I need:
+    + matrix *genes x samples* with omic data
+    + vector *samples x 1* with patient_id's for a certain omic data source (may contain duplicates)
+    + dataframe *patients x 4* that contains batch_id and clinical data for all patients from a particular disease
+* Test new AddSurvivalDataToOmics() function:
+```{r}
+AddSurvDataToOmics("BRCA", "mRNA")
+```
