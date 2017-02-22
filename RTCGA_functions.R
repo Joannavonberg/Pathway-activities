@@ -27,17 +27,25 @@ GetPheno <- function(dis, save){
     clin[,c("patient.days_to_death", "patient.days_to_last_followup")], 
     row.names = toupper(clin$patient.bcr_patient_barcode))
   if(save){
-    writeFile(df, sprintf("%s_clinical.txt", dis))
+    fn <- sprintf("%s_clinical.txt", dis)
+    print(fn)
+    writeFile(df, fn)
   }
   return(df)
 }
 
 GetOmicMat <- function(dis, om, save){
   df <- GetTCGAData(dis, om)
-  rownames(df) <- toupper(df$bcr_patient_barcode)
+  switch(om,
+         miRNASeq = NULL,
+         CNV = NULL,
+         rownames(df) <- toupper(df$bcr_patient_barcode)
+           )
   df$bcr_patient_barcode <- NULL
   if(save){
-    writeFile(df, dis_om)
+    fn <- sprintf("%s_%s", dis, om)
+    print(fn)
+    writeFile(df, fn)
   }
   return(t(as.matrix(df)))
 }
@@ -46,7 +54,8 @@ GetPatientsVec <- function(barcodes, save, fn){
   res <- data.frame(patient_id = substr(barcodes, 1, 12), batch_id = as.factor(substr(barcodes, 22, 25)), row.names = toupper(barcodes))
   # res <- matrix(c(substr(barcodes, 1, 12), substr(barcodes, 22, 25)), ncol = 2, dimnames = list(barcodes))
   if(save){
-    write(res, fn, ncolumns = 1)
+    print(fn)
+    writeFile(res, fn)
   }
   return(res)
 }
@@ -162,7 +171,8 @@ FindIntersection <- function(omics, disease, save = FALSE){
 
 CorrectBatch <- function(mat, patients, pheno, save = FALSE){
   batch <- patients$batch_id
-  modcombat <- model.matrix(~1, data = pheno)
+  input <- data.frame(cbind(patients, pheno[as.character(patients$patient_id),]))
+  modcombat <- model.matrix(~1, data = input)
   corrected <- ComBat(dat=mat, batch=batch, mod=modcombat)
   return(corrected)
 }
