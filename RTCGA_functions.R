@@ -17,6 +17,11 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
       assign(sprintf("%s_patients", dis_om), 
              GetPatientsVec(colnames(get(dis_om)), save, sprintf("%s_patients.txt", dis_om)), 
              envir = .GlobalEnv)
+      if(nrow(get(sprintf("%s_patients", dis_om))) == 0){
+        assign(sprintf("%s_patients", dis_om), 
+               NULL,
+               envir = .GlobalEnv)
+      }
     }
   }
 }
@@ -36,6 +41,7 @@ GetPheno <- function(dis, save){
 
 GetOmicMat <- function(dis, om, save){
   df <- GetTCGAData(dis, om)
+  if(is.null(df)){return(df)}
   switch(om,
          miRNASeq = NULL,
          CNV = NULL,
@@ -47,7 +53,8 @@ GetOmicMat <- function(dis, om, save){
     print(fn)
     writeFile(df, fn)
   }
-  return(t(as.matrix(df)))
+  if(om == "mRNA"){return(t(as.matrix(df)))}
+  else{return(df)}
 }
 
 GetPatientsVec <- function(barcodes, save, fn){
@@ -76,67 +83,6 @@ GetTCGAData <- function(dis, type){
   }
 }
 
-# PhenoData <- function(pheno, dis){
-#     # preparing clinical data
-#     new_data <- exists(sprintf("%s.%s.20160128", dis, "clinical"))
-#     if(new_data){
-#       clin <<- get(sprintf("%s.%s.20160128", dis, "clinical"), envir = .GlobalEnv)
-#       print(sprintf("For %s, clinical data from 2016-01-28 will be used", dis))
-#     }
-#     else{
-#       clin <<- get(sprintf("%s.%s", dis, "clinical"), envir = .GlobalEnv)
-#       print(sprintf("Clinical data from 2016-01-28 is not available, will use old data for %s.", dis))
-#     }
-#     barcodes_clin <<- toupper(clin$patient.bcr_patient_barcode)
-#     print(barcodes_clin[1:4])
-#     rownames(clin) <<- barcodes_clin
-#     # patients <- substr(barcodes_clin, 1, 12)
-#     batch_id <- substr(barcodes_clin, 22, 25)
-# 
-#     days_to_death <- clin$patient.days_to_death
-#     # names(days_to_death) <- 
-#     days_to_last_followup <- clin$patient.days_to_last_followup
-#     # names(days_to_last_followup) <- patients
-#     return(cbind(barcodes_clin, batch_id, days_to_death, days_to_last_followup))
-# looks like:
-# barcode - batch_id - days_to_death - days_to_last_dinges
-# }
-
-# the function AddSurvivalData wants as input: 
-# - a dataframe with samples as rows and omic features of one omic source as columns (omics)
-# - a dataframe with patients as rows and clinical features as columns
-#
-# and returns:
-# - a dataframe like the original omic input, with extra columns patient_id, days_to_death and days_to_last_followup
-# NB. It is not specific to any disease
-# AddSurvivalData <- function(omics, clin, om, prad = FALSE){
-#   if(om == "CNV"){
-#     patients_omics <- substr(omics$Sample, 1, 12)
-#     batch_id <- substr(omics$Sample, 22, 25)
-#   }
-#   else{
-#     patients_omics <- substr(rownames(omics), 1, 12)
-#     batch_id <- substr(rownames(omics), 22, 25)
-#   }
-#   omics$batch_id <- batch_id
-#   omics$patient_id <- patients_omics
-#   merge_patients <- rownames(clin) %in% patients_omics
-#   
-#   patients <- rownames(clin)[merge_patients]
-#   days_to_death <- clin$patient.days_to_death[merge_patients]
-#   names(days_to_death) <- patients
-#   days_to_last_followup <- clin$patient.days_to_last_followup[merge_patients]
-#   names(days_to_last_followup) <- patients
-#   
-#   omics$days_to_death <- rep(-1, nrow(omics))
-#   omics$days_to_last_followup <- rep(-1, nrow(omics))
-#   for (patient in patients){
-#     omics$days_to_death[omics$patient_id == patient] <- days_to_death[patient]
-#     omics$days_to_last_followup[omics$patient_id == patient] <- days_to_last_followup[patient]
-#   }
-#   return(omics)
-# }
-
 # the function writeFile wants as input:
 # - a dataframe
 # - an omic type for in the filename
@@ -146,23 +92,23 @@ writeFile <- function(df, fn){
 
 FindIntersection <- function(omics, disease, save = FALSE){
   # might not be a good idea, to copy very large dataframes
-  oms <- mget(paste(disease, omics, sep = "_"), envir = .GlobalEnv, ifnotfound = NA)
-  # print(length(oms))
-  # print("...")
+  oms <- mget(paste(disease, omics, "patients", sep = "_"), envir = .GlobalEnv, ifnotfound = NA)
+  print(length(oms))
+  print("...")
   i <- 1
-  while(is.na(oms[[i]])){
-    # print(i)
+  while(is.na(oms[[i]]) | is.null(oms[[i]])){
+    print(i)
     i = i + 1
   }
-  # print("...")
+  print("...")
   res <- oms[[i]]$patient_id
   # print(res[1:10])
-  while(i <= length(oms) && !is.na(oms[[i]])){
+  while(i <= length(oms) && !is.null(oms[[i]]) && !is.na(oms[[i]])){
     res <- res[res %in% oms[[i]]$patient_id]
     i = i + 1
-    # print(i)
+    print(i)
   }
-  # print("......")
+  print("......")
   if(save){
     write(unique(res), sprintf("%s_%s_patients.txt", disease, paste0(omics, collapse = "-")))
   }

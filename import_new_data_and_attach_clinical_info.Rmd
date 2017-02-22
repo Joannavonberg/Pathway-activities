@@ -71,11 +71,11 @@ It worked! I can now use the most recent data from the RTCGA packages.
 ```{r}
 source("RTCGA_functions.R")
 
-AddSurvDataToOmics(diseases, omics, save = FALSE)
+AddSurvDataToOmics(diseases, omics, save = TRUE)
 
 # calculate the intersection (which patients have data for all omics types)
 for(dis in diseases){
-  assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = FALSE))
+  assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = TRUE))
 }
 ```
 14-02-2017:
