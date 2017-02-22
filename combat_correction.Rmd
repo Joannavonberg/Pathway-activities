@@ -104,12 +104,133 @@ CorrectBatch()
     + dataframe *patients x 4* that contains batch_id and clinical data for all patients from a particular disease
 * Test new AddSurvivalDataToOmics() function:
 ```{r}
-AddSurvDataToOmics("BRCA", "mRNA")
-# cor <- CorrectBatch(BRCA_mRNA, BRCA_mRNA_patients, BRCA_pheno)
+# AddSurvDataToOmics("BRCA", "mRNA")
+ind <- 1:10
+mat_test <- BRCA_mRNA[ind,ind]
+pat_test <- BRCA_mRNA_patients[ind,]
+phe_test <- BRCA_pheno[as.character(pat_test$patient_id),]
+test_pheno_input <- data.frame(cbind(pat_test, BRCA_pheno[as.character(pat_test$patient_id),]))
+```
+
+```{r}
+cor <- CorrectBatch(BRCA_mRNA, BRCA_mRNA_patients, BRCA_pheno)
+```
+
+22-02-2017
+
+Of course, now we have missing values because either days_to_death or days_to_last_followup is NA. I need to read more about censoring in survival analysis.
+
+Random thought: days_to_death and days_to_followup are counted from the day of diagnosis, right? So what if some people just went to the doctor earlier? This skews the results...
+
+Second thought: would it maybe be a good idea to discretize the survival data in short and long survival before correcting the batch effects?
+
+```{r}
+# pc_BRCA_mRNA <- prcomp(BRCA_mRNA[!is.na(BRCA_mRNA)])
+# library(ggplot2)
+# Y.complete <- rbind(Y1, Y2)
+# phe.complete <- rbind(phe1,phe2)
+# pc <- prcomp(Y.complete)
+pc <- prcomp(BRCA_mRNA)
+```
+There are missing values in this dataset...
+```{r}
+diseases <- c("BRCA", "GBM", "OV")
+omics <- c("mRNA", "miRNASeq", "CNV", "methylation")
+a <- paste("RTCGA.", c("clinical", omics), sep = "")
+b <- paste(a, ".20160128", sep = "")
+pckgs <- c(a,b)
+
+library("RTCGA", lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
+for(p in pckgs){
+  require(p, character.only = TRUE, lib = "../R/x86_64-pc-linux-gnu-library/3.3")
+}
+
 ```
 ```{r}
-# install.packages("knitr")
-library(knitr)
-library(DBI)
-db <- dbConnect(RSQLite::SQLite(), dbname = "sql.sqlite")
+pc <- prcomp(BRCA_mRNA)
+pc.pred <- predict(pc,newdata = BRCA_mRNA)
+p <- ggplot(as.data.frame(pc.pred), aes(x=pc.pred[,1], y= pc.pred[,2],
+colour= scale_color_gradient(BRCA_pheno$patient.days_to_death[BRCA_mRNA_patients]))) + ggtitle("Batch Effects before
+Transformation") + labs(y = "PC1", x = "PC2", colour = "Classes") +
+geom_point(shape=19)
+plot(p)
 ```
+**Intermezzo**
+New problem: for CNV, methylation and miRNASeq I don't want a patients x genes matrix (well, in the end I do but not for now) and I also don't need to correct batch effects for this (is this correct??).
+
+So, change the addsurvdata function again to account for this.
+*Done*
+Also changed the intersection function to be able to work with the new way of reading in the data.
+
+Okay, so there are missing values... This is something that should be taken care of during the reading in of the data...
+```{r}
+missing <- is.na(BRCA_mRNA)
+length(missing)
+sum(missing)
+```
+
+1,695 missing values on 10,510,260 total. I want to know which rows and columns contains these missing values, but I don't know how to get this information.
+```{r}
+sum(is.na(GBM_mRNA))
+```
+
+```{r}
+sum(is.na(OV_mRNA))
+```
+
+Ashar mentioned there is a package to impute missing data, specifically for micro array data: impute.
+```{r}
+biocLite("impute")
+library(impute)
+```
+```{r}
+for(d in diseases){
+  assign(
+    sprintf("%s_mRNA_imputed", d),
+    impute.knn(get(sprintf("%s_mRNA", d))),
+    envir = .GlobalEnv
+  )
+}
+```
+
+```{r}
+# library(ggplot2)
+# Y.complete <- rbind(Y1, Y2)
+# phe.complete <- rbind(phe1,phe2)
+# pc <- prcomp(BRCA_mRNA_imputed$data)
+# pc.pred <- predict(pc,newdata = BRCA_mRNA_imputed$data)
+# p <- ggplot(as.data.frame(pc.pred), aes(x=pc.pred[,1], y= pc.pred[,2]))
+# + ggtitle("Batch Effects before Transformation") 
+# + labs(y = "PC1", x = "PC2", colour = "Classes") + geom_point(shape=19)
+p <- ggplot(as.data.frame(pc.pred), aes(x=pc.pred[,1], y= pc.pred[,2])) + ggtitle("Batch Effects before Transformation") + labs(y = "PC1", x = "PC2", colour = "Classes") + geom_point(shape=19)
+p
+```
+
+Next problem: the survival data as I'm using it now has NA's. It might be a better idea to make one column with days_to_death and one column saying if the particular patient was censored (boolean values).
+```{r}
+test <- ifelse(is.na(BRCA_pheno$patient.days_to_death), BRCA_pheno$patient.days_to_last_followup, BRCA_pheno$patient.days_to_death)
+```
+This works, but now I don't know anymore which patients are censored.
+```{r}
+days <- ifelse(is.na(BRCA_pheno$patient.days_to_death), 
+               BRCA_pheno$patient.days_to_last_followup, 
+               BRCA_pheno$patient.days_to_death)
+censored <- ifelse(is.na(BRCA_pheno$patient.days_to_death),
+                   TRUE,
+                   FALSE
+                   )
+new_pheno <- cbind(days, censored)
+```
+```{r}
+# pc <- prcomp(t(BRCA_mRNA_imputed$data))
+# pc.pred <- predict(pc,newdata = t(BRCA_mRNA_imputed$data))
+p <- ggplot(as.data.frame(pc.pred), aes(x=pc.pred[,1], y= pc.pred[,2], colour = as.numeric(new_pheno[BRCA_mRNA_patients$patient_id,"days"]))) + ggtitle("Batch Effects before Transformation") + labs(y = "PC1", x = "PC2", colour = "Classes") + geom_point(shape=19)
+p
+```
+
+```{r}
+b <- ggplot(as.data.frame(pc.pred), aes(x=pc.pred[,1], y= pc.pred[,2], colour = as.factor(BRCA_mRNA_patients$batch_id))) + ggtitle("Batch Effects before Transformation") + labs(y = "PC1", x = "PC2", colour = "Classes") + geom_point(shape=19)
+b
+```
+
+The batch effect doesn't seem to be really strong, it is probably best to not correct because the more the data is changed the more we could bias the outcome. But, check for the other diseases and for miRNASeq as well.
