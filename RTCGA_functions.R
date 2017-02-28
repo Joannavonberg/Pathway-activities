@@ -28,15 +28,31 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
 
 GetPheno <- function(dis, save){
   clin <- GetTCGAData(dis, "clinical")
-  df <- data.frame(
-    clin[,c("patient.days_to_death", "patient.days_to_last_followup")], 
-    row.names = toupper(clin$patient.bcr_patient_barcode))
+  # df <- data.frame(
+  #   clin[,c("patient.days_to_death", "patient.days_to_last_followup")], 
+  #   row.names = toupper(clin$patient.bcr_patient_barcode))
+  days <- ifelse(is.na(clin$patient.days_to_death), 
+                 clin$patient.days_to_last_followup, 
+                 clin$patient.days_to_death)
+  censored <- ifelse(is.na(clin$patient.days_to_death),
+                     TRUE,
+                     FALSE)
+  df <- cbind(days, censored)
   if(save){
     fn <- sprintf("%s_clinical.txt", dis)
-    print(fn)
     writeFile(df, fn)
   }
   return(df)
+}
+
+NewPheno <- function(old_pheno){
+  days <- ifelse(is.na(old_pheno$patient.days_to_death), 
+                 old_pheno$patient.days_to_last_followup, 
+                 old_pheno$patient.days_to_death)
+  censored <- ifelse(is.na(old_pheno$patient.days_to_death),
+                     TRUE,
+                     FALSE)
+  return(cbind(days, censored))
 }
 
 GetOmicMat <- function(dis, om, save){
@@ -121,4 +137,12 @@ CorrectBatch <- function(mat, patients, pheno, save = FALSE){
   modcombat <- model.matrix(~1, data = input)
   corrected <- ComBat(dat=mat, batch=batch, mod=modcombat)
   return(corrected)
+}
+
+MakeBatchPlot <- function(){
+  # pc <- prcomp(t(BRCA_mRNA_imputed$data))
+  # pc.pred <- predict(pc,newdata = t(BRCA_mRNA_imputed$data))
+  p <- ggplot(as.data.frame(pc.pred), aes(x=pc.pred[,1], y= pc.pred[,2], colour = as.numeric(new_pheno[BRCA_mRNA_patients$patient_id,"days"]))) + ggtitle("Batch Effects before Transformation") + labs(y = "PC1", x = "PC2", colour = "Classes") + geom_point(shape=19)
+  p
+  return(p)
 }
