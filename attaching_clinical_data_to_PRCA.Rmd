@@ -31,3 +31,7 @@ plot(as.factor(clin$patient.diagnostic_mri_results.diagnostic_mri_result))
 count(as.factor(clin$patient.diagnostic_mri_results.diagnostic_mri_result))
 ```
 Here, the ratio bad/good would be 24/54 = 0.444 which is better than both other options, but the total number of patients would only be 78 here (instead of the original 499).
+
+24-02-2017
+
+During the group meeting, the imbalance in class labels was discussed and professor Froehlich said that the class imbalance would not be a problem, unless it is an extr
