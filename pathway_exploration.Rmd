@@ -4,8 +4,8 @@ output: html_notebook
 ---
 
 ```{r}
-biocLite("KEGGgraph")
-biocLite("UniProt.ws")
+# biocLite("KEGGgraph")
+# biocLite("UniProt.ws")
 library(KEGGgraph)
 library(UniProt.ws)
 ```
@@ -94,16 +94,20 @@ pathway1_BRCA_mRNA <- apply(BRCA_mRNA[,names(pw1_genes)], 1, mean)
 
 ```{r}
 PathwaysMrna <- function(i){
-  res <- apply(BRCA_mRNA[,names(entrez_BRCA_mRNA[as.numeric(kegg2[[i]])])], 1, mean)
-  return(res)
+  ind <- colnames(BRCA_mRNA) %in% names(entrez_BRCA_mRNA[as.numeric(kegg2[[i]])])
+  if(sum(ind) == 0){return(NULL)}
+  if(sum(ind) == 1){return(BRCA_mRNA[,ind])}
+  return(apply(BRCA_mRNA[,ind], 1, mean))
 }
+vPathwaysMrna <- Vectorize(PathwaysMrna)
 ```
 Rewrite the above function to return just one pathway, and cbind the results
 ```{r}
-vtest <- Vectorize(PathwaysMrna)
-vtest(1)
-apply(1:2, )
-cols <- c(PathwaysMrna(1:2))
-test4pathways <- cbind(cols)
+test4pathways <- vPathwaysMrna(1:229)
+colnames(test4pathways) <- names(kegg2)
 ```
 
+A few thoughts:
+
+* If I'm collapsing the data on pathways, what is the effect of some data sources having data for a particular gene in a particular pathway and others not having data for that particular gene? Would it be best to remove that gene altogether or not?
+* 
