@@ -61,13 +61,22 @@ plot(density(pValuesCombat))
 Now, applying this technique to the RTCGA data:
 ```{r}
 diseases <- c("BRCA", "GBM", "OV")
-omics <- c("mRNA", "miRNASeq", "CNV", "methylation")
+omics <- c("mRNA", "miRNASeq", "methylation")
 for(d in diseases){
+  assign(
+    sprintf("%s_pheno", d),
+    read.table(
+      sprintf("%s_clinical.txt_with_survival_data.txt", d)
+    ),
+    envir = .GlobalEnv
+  )
   for(o in omics){
-    tryCatch(
-      assign(sprintf("%s_%s", d, o), read.table(sprintf("%s_%s_with_survival_data.txt", d, o))),
-      finally = next
-    )
+    assign(sprintf("%s_%s", d, o), 
+           read.table(sprintf("%s_%s_with_survival_data.txt", d, o)),
+    envir = .GlobalEnv)
+    assign(sprintf("%s_%s_patients", d, o),
+           read.table(sprintf("%s_%s_patients.txt_with_survival_data.txt", d, o)),
+    envir = .GlobalEnv)
   }
 }
 ```
@@ -234,3 +243,91 @@ b
 ```
 
 The batch effect doesn't seem to be really strong, it is probably best to not correct because the more the data is changed the more we could bias the outcome. But, check for the other diseases and for miRNASeq as well.
+
+* Write a function that extracts only 'read_counts' or 'reads_per_million_mirna_mapped' and puts it in a matrix
+* Write a function that makes a plot like the one seen above and saves it in a variable
+* Call this function for each mRNA or miRNA - disease combination
+
+24-02-2017
+
+Group meeting:
+
+* Definitely use ComBat to correct the batch effects: they might not always be visible directly in a PCA plot, but could still have an effect
+* And still need to check the other data sets.
+* Download micro array data instead of sequencing data.
+  - I can not find miRNA micro array data on TCGA (not even on the website itself)
+  
+28-02-2017
+
+```{r}
+for(d in c("BRCA", "OV")){
+  print(d)
+  assign(sprintf("%s_mRNA_corrected", d), CorrectBatch(
+    get(sprintf("%s_mRNA_imputed", d))$data,
+    get(sprintf("%s_mRNA_patients", d)),
+    get(sprintf("%s_pheno", d))
+  ))
+}
+```
+GBM data is all from one batch, so doesn't need to be corrected.
+
+```{r}
+library("VennDiagram", lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
+venn <- venn.diagram(list(local = GBM_mRNA_patients$patient_id, new = rownames(GBM_pheno)), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(venn, recording = FALSE)
+```
+
+```{r}
+library("VennDiagram", lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
+venn <- venn.diagram(list(local = OV_mRNA_patients$patient_id, new = rownames(OV_pheno)), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(venn, recording = FALSE)
+```
+
+Problem: there is no overlap in GBM mRNA data and GBM clinical data. Aha, I found the reason: in reading in the data, there should be one choice made for 'new' or 'old' data, not change it per omic data.
+
+```{r}
+source("https://bioconductor.org/biocLite.R")
+diseases <- c(TRUE, FALSE, TRUE)
+names(diseases) <- c("BRCA", "GBM", "OV")
+omics <- c("mRNA", "miRNASeq", "CNV", "methylation")
+a <- paste("RTCGA.", c("clinical", omics), sep = "")
+b <- paste(a, ".20160128", sep = "")
+pckgs <- c(a,b)
+
+library("RTCGA", lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
+for(p in pckgs){
+  require(p, character.only = TRUE, lib = "../R/x86_64-pc-linux-gnu-library/3.3")
+}
+
+source("RTCGA_functions.R")
+
+AddSurvDataToOmics(diseases, omics, save = TRUE)
+
+# calculate the intersection (which patients have data for all omics types)
+for(dis in names(diseases)){
+  assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = TRUE))
+}
+
+# biocLite("impute")
+library(impute)
+
+for(d in c("BRCA", "OV")){
+  assign(
+    sprintf("%s_mRNA_imputed", d),
+    impute.knn(get(sprintf("%s_mRNA", d))),
+    envir = .GlobalEnv
+  )
+}
+
+library("sva")
+for(d in c("BRCA", "OV")){
+  print(d)
+  assign(sprintf("%s_mRNA_corrected", d), CorrectBatch(
+    get(sprintf("%s_mRNA_imputed", d))$data,
+    get(sprintf("%s_mRNA_patients", d)),
+    get(sprintf("%s_pheno", d))
+  ))
+}
+```
