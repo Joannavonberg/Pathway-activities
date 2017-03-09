@@ -5,14 +5,15 @@
 #
 # and returns nothing, but creates a data-frame with survival data for each disease and omic data source combination
 AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
-  for(dis in diseases){
+  for(dis in names(diseases)){
+    res <- GetPheno(dis, save, diseases[dis])
     assign(sprintf("%s_pheno", dis), 
-           GetPheno(dis, save),
+           res[[1]],
            envir = .GlobalEnv)
     for(om in omics){
       dis_om <- sprintf("%s_%s", dis, om)
       assign(dis_om, 
-             GetOmicMat(dis, om, save), 
+             GetOmicMat(dis, om, save, diseases[dis]), 
              envir = .GlobalEnv)
       assign(sprintf("%s_patients", dis_om), 
              GetPatientsVec(colnames(get(dis_om)), save, sprintf("%s_patients.txt", dis_om)), 
@@ -26,8 +27,9 @@ AddSurvDataToOmics <- function(diseases, omics, save = FALSE){
   }
 }
 
-GetPheno <- function(dis, save){
-  clin <- GetTCGAData(dis, "clinical")
+GetPheno <- function(dis, save, newdata){
+  res <- GetTCGAData(dis, "clinical", newdata)
+  clin <- res[[1]]
   # df <- data.frame(
   #   clin[,c("patient.days_to_death", "patient.days_to_last_followup")], 
   #   row.names = toupper(clin$patient.bcr_patient_barcode))
@@ -38,11 +40,12 @@ GetPheno <- function(dis, save){
                      TRUE,
                      FALSE)
   df <- cbind(days, censored)
+  names(df) <- clin$patient.bcr_patient_barcode  
   if(save){
     fn <- sprintf("%s_clinical.txt", dis)
     writeFile(df, fn)
   }
-  return(df)
+  return(list(df, res[[2]]))
 }
 
 NewPheno <- function(old_pheno){
@@ -52,11 +55,12 @@ NewPheno <- function(old_pheno){
   censored <- ifelse(is.na(old_pheno$patient.days_to_death),
                      TRUE,
                      FALSE)
-  return(cbind(days, censored))
+
+  return()
 }
 
-GetOmicMat <- function(dis, om, save){
-  df <- GetTCGAData(dis, om)
+GetOmicMat <- function(dis, om, save, newdata){
+  df <- GetTCGAData(dis, om, newdata)[[1]]
   if(is.null(df)){return(df)}
   switch(om,
          miRNASeq = NULL,
@@ -83,20 +87,21 @@ GetPatientsVec <- function(barcodes, save, fn){
   return(res)
 }
 
-GetTCGAData <- function(dis, type){
-  string <- sprintf("%s.%s.20160128", dis, type)
-  if(exists(string)){
-    return(get(string))
+GetTCGAData <- function(dis, type, newdata = TRUE){
+  if(newdata){
+    res <- sprintf("%s.%s.20160128", dis, type)
+    if(exists(res)){
+      return(list(get(res), TRUE))
+    }
   }
   else{
-    string <- sprintf("%s.%s", dis, type)
-    if(exists(string)){
-      return(get(string))
+    res <- sprintf("%s.%s", dis, type)
+    if(exists(res)){
+      return(list(get(res), FALSE))
     }
-    else{
-      return(NULL)
-    }
+    return(NULL)
   }
+  return(NULL)
 }
 
 # the function writeFile wants as input:
@@ -112,7 +117,7 @@ FindIntersection <- function(omics, disease, save = FALSE){
   print(length(oms))
   print("...")
   i <- 1
-  while(is.na(oms[[i]]) | is.null(oms[[i]])){
+  while(is.null(oms[[i]]) || is.na(oms[[i]])){
     print(i)
     i = i + 1
   }
@@ -133,7 +138,14 @@ FindIntersection <- function(omics, disease, save = FALSE){
 
 CorrectBatch <- function(mat, patients, pheno, save = FALSE){
   batch <- patients$batch_id
-  input <- data.frame(cbind(patients, pheno[as.character(patients$patient_id),]))
+  ind <- rownames(pheno) %in% as.character(patients$patient_id)
+  # cbind(patients, pheno[ind, "days"])
+  res <- patients
+  res$pheno <- rep(-1, nrow(res))
+  for(i in rownames(pheno)[ind]){
+    res[res$patient_id == i, "pheno"] <- pheno[i, "days"]
+  }
+  input <- data.frame(res)
   modcombat <- model.matrix(~1, data = input)
   corrected <- ComBat(dat=mat, batch=batch, mod=modcombat)
   return(corrected)
