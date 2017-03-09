@@ -1,0 +1,109 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+biocLite("KEGGgraph")
+biocLite("UniProt.ws")
+library(KEGGgraph)
+library(UniProt.ws)
+```
+
+KEGGgraph is probably great for using the topological info from pathways, but for now I just want genelists.
+
+```{r}
+# biocLite("org.Hs.eg.db")
+library(org.Hs.eg.db)
+kegg <- org.Hs.egPATH2EG
+mapped <- mappedkeys(kegg)
+kegg2 <- as.list(kegg[mapped])
+```
+Oh joy... I need to convert identifiers. =D
+
+```{r}
+uniprots <- Rkeys(org.Hs.egUNIPROT)
+# genes_BRCA_mRNA <- colnames(BRCA_mRNA)
+# genes_BRCA_mRNA[1:4]
+# genes <- UniProt.ws(genes_BRCA_mRNA)
+select(org.Hs.eg.db, uniprots[1:4], "ENTREZID", "UNIPROT")
+```
+```{r}
+# biocLite("GenomicFeatures")
+library(GenomicFeatures)
+biocLite("mygene")
+library(mygene)
+```
+```{r}
+## Bimap interface:
+x <- org.Hs.egGENENAME
+# Get the gene names that are mapped to an entrez gene identifier
+mapped_genes <- mappedkeys(x)
+# Convert to a list
+xx <- as.list(x[mapped_genes])
+```
+
+```{r}
+gene_lookup <- cbind(org.Hs.eg.db, getGene(org.Hs.eg.db)$name)
+```
+```{r}
+# biocLite("biomaRt")
+library(biomaRt)
+```
+
+```{r}
+ensembl <- useMart("ensembl",dataset="hsapiens_gene_ensembl")
+ 
+#create a filter for all assembled human chromosomes
+my_chr <- c(1:22, 'M', 'X', 'Y')
+ 
+#listAttributes shows all attributes
+attributes <- listAttributes(ensembl)
+ 
+#find entrez attribute name
+grep(pattern="entrez", x=attributes$description, ignore.case=T)
+#[1] 62
+attributes[62,]
+# entrezgene
+
+grep(pattern="hgnc symbol", x=attributes$description, ignore.case=T)
+attributes[71,]
+# hgnc_symbol
+```
+```{r}
+entrez_hgnc <- getBM(attributes = c('entrezgene', "hgnc_symbol"),
+                        filters = 'chromosome_name',
+                        values = my_chr,
+                        mart = ensembl
+                        )
+entrez_hgnc <- entrez_hgnc[complete.cases(entrez_hgnc),]
+entrez_hgnc <- entrez_hgnc[entrez_hgnc$entrezgene != "" & entrez_hgnc$hgnc_symbol != "",]
+dupli_hgnc <- duplicated(entrez_hgnc$hgnc_symbol)
+entrez_hgnc <- entrez_hgnc[!dupli_hgnc,]
+
+rownames(entrez_hgnc) <- entrez_hgnc$hgnc_symbol
+
+```
+The test:
+```{r}
+entrez_BRCA_mRNA <- entrez_hgnc[colnames(BRCA_mRNA), "entrezgene"]
+names(entrez_BRCA_mRNA) <- colnames(BRCA_mRNA)
+pw1_genes <- entrez_BRCA_mRNA[as.numeric(kegg2[[1]])]
+pathway1_BRCA_mRNA <- apply(BRCA_mRNA[,names(pw1_genes)], 1, mean)
+```
+
+```{r}
+PathwaysMrna <- function(i){
+  res <- apply(BRCA_mRNA[,names(entrez_BRCA_mRNA[as.numeric(kegg2[[i]])])], 1, mean)
+  return(res)
+}
+```
+Rewrite the above function to return just one pathway, and cbind the results
+```{r}
+vtest <- Vectorize(PathwaysMrna)
+vtest(1)
+apply(1:2, )
+cols <- c(PathwaysMrna(1:2))
+test4pathways <- cbind(cols)
+```
+
