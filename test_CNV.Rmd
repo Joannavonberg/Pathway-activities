@@ -1,0 +1,23 @@
+---
+title: "testing CVN conversion on model data"
+output: html_notebook
+---
+
+```{r}
+library(DNAcopy)
+library(ParDNAcopy)
+data(coriell)
+```
+
+```{r}
+CNA.object <- CNA(cbind(coriell$Coriell.05296),
+                  coriell$Chromosome,
+                  coriell$Position,
+                  data.type="logratio",
+                  sampleid="c05296")
+```
+
+```{r}
+segment_CNA_obj <- parSegment(CNA.object, distrib = "Rparallel", njobs = 23, out = "skinny", verbose = 1)
+```
+
