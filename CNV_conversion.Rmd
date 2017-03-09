@@ -1,0 +1,131 @@
+---
+title: "Converting CNV to a genes x samples matrix"
+output: html_notebook
+---
+
+```{r}
+
+# biocLite("CNTools")
+# biocLite("DNAcopy")
+# biocLite("ParDNAcopy")
+# install.packages("parallel")
+library("CNTools")
+library("DNAcopy")
+library("ParDNAcopy")
+library("parallel")
+data("geneInfo")
+```
+
+28-02-2017
+
+Read about how to use this package
+
+01-03-2017
+
+```{r}
+BRCA_CNV_CNA <- CNA(genomdat = t(BRCA_CNV[1:500,5:6]), chrom = BRCA_CNV$Chromosome[1:500], sampleid = BRCA_CNV$Sample[1:500], maploc = BRCA_CNV[1:500,3])
+# BRCA_CNV_segs <- segment()
+# BRCA_CNV_cnseg <- CNSeg(BRCA_CNV)
+# BRCA_CNV_genes <- getRS(object = BRCA_CNV_cnseg, by = "gene", imput = FALSE, XY = FALSE, what = "mean", geneMap = geneInfo)
+```
+
+```{r}
+BRCA_CNV_segment <- parSegment(BRCA_CNV_CNA, out = "skinny")
+```
+
+```{r}
+BRCA_CNV_cnseg <- CNSeg(BRCA_CNV_segment[["output"]])
+BRCA_CNV_genes <- getRS(object = BRCA_CNV_cnseg, by = "gene", imput = FALSE, XY = FALSE, what = "mean", geneMap = geneInfo)
+reduced <- rs(BRCA_CNV_genes)
+```
+http://rstudio-pubs-static.s3.amazonaws.com/6807_cd09d39121f1496fab0fa31f8e32bb2b.html
+```{r}
+detectCores()
+```
+```{r}
+sub <- 1:1000
+system.time(
+  for(d in c("BRCA")){
+    print(d)
+    obj <- get(sprintf("%s_CNV", d))
+    res <- getRS(
+      object = CNSeg(
+        parSegment(
+          CNA(
+            genomdat = t(obj[sub,5:6]), 
+            chrom = obj$Chromosome[sub], 
+            sampleid = obj$Sample[sub], 
+            maploc = obj[sub,3]
+          ), 
+          out = "skinny", distrib = "Rparallel", njobs = 23
+        )[["output"]]), 
+      by = "gene", imput = FALSE, XY = FALSE, what = "mean", geneMap = geneInfo)
+    print("Computation done.")
+    assign(sprintf("%s_CNV_conv", d), rs(res))
+    write.table(x = rs(res), file = sprintf("%s_CNV_converted.txt", d))
+  }
+)
+```
+```{r}
+sub <- 1:1000
+system.time(
+  for(d in c("BRCA")){
+    print(d)
+    obj <- get(sprintf("%s_CNV", d))
+    res <- getRS(
+      object = CNSeg(
+        parSegment(
+          CNA(
+            genomdat = t(obj[sub,5:6]), 
+            chrom = obj$Chromosome[sub], 
+            sampleid = obj$Sample[sub], 
+            maploc = obj[sub,3]
+          ), 
+          out = "skinny", distrib = "Rparallel", njobs = 23
+        )[["output"]]), 
+      by = "gene", imput = FALSE, XY = FALSE, what = "mean", geneMap = geneInfo)
+    print("Computation done.")
+    assign(sprintf("%s_CNV_conv", d), rs(res))
+    write.table(x = rs(res), file = sprintf("%s_CNV_converted.txt", d))
+  }
+)
+```
+
+```{r}
+for(d in c("BRCA", "GMB")){
+  print(d)
+  obj <- get(sprintf("%s_CNV", d))
+  res <- getRS(
+    object = CNSeg(
+      parSegment(
+        CNA(
+          genomdat = t(obj[,5:6]), 
+          chrom = obj$Chromosome, 
+          sampleid = obj$Sample, 
+          maploc = obj[,3]
+        ), 
+        out = "skinny", distrib = "Rparallel", njobs = detectCores()
+      )[["output"]]), 
+    by = "gene", imput = FALSE, XY = FALSE, what = "mean", geneMap = geneInfo)
+  print("Computation done.")
+  assign(sprintf("%s_CNV_conv", d), rs(res))
+  write.table(x = rs(res), file = sprintf("%s_CNV_converted.txt", d))
+}
+
+```
+```{r}
+sub <- 1:50000
+system.time(
+  for(d in c("BRCA", "GBM")){
+    print(d)
+    assign(sprintf("%s_CNA", d), 
+           CNA(genomdat = t(get(sprintf("%s_CNV", d))[sub,5:6]), 
+               chrom = BRCA_CNV$Chromosome[sub], sampleid = BRCA_CNV$Sample[sub], maploc = BRCA_CNV[sub,3])
+    )
+    print("Done with")
+    print(d)
+    print("...")
+  }
+)
+```
+
