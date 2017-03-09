@@ -1,0 +1,16 @@
+---
+title: "Using firehose to download already converted data"
+output: html_notebook
+---
+http://gdac.broadinstitute.org/runs/analyses__latest/reports/cancer/GBM/CopyNumber_Gistic2/nozzle.html
+The genes x samples matrix was downloaded from here.
+```{r}
+CNV_GBM <- read.table("Downloads/gdac.broadinstitute.org_GBM-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt", header = TRUE)
+```
+
+```{r}
+for(d in diseases){
+  assign(sprintf("%s_CNV", d), read.table(sprintf("Downloads/gdac.broadinstitute.org_%s-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt", d), header = TRUE))
+}
+```
+
