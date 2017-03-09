@@ -109,5 +109,3 @@ for(dis in diseases){
   assign(sprintf("%s_inter", dis), FindIntersection(c(omics, "methylation"), dis, save = FALSE))
 }
 ```
-
-
