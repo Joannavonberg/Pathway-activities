@@ -1,0 +1,56 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+biocLite("plyr")
+biocLite("dplyr")
+library("plyr")
+library("dplyr")
+```
+
+```{r}
+test <- cor(BRCA_mRNA[1,], as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]))
+
+test2 <- apply(BRCA_mRNA, 1, cor, y = as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]))
+plot(test2, cex = 0.1)
+
+# gives indices:
+ordered <- order(test2, decreasing = TRUE)
+
+res <- apply(
+  BRCA_mRNA, 
+  2, 
+  function(x){
+    return(
+      mean(x[ordered[(0.5*length(ordered):length(ordered))]])
+      )
+    }
+  )
+plot(res, cex = 0.1, col = ifelse(as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300, "red", "green"))
+```
+It doesn't look very convincing, but that is because the highest correlation is only 0.169. Don't forget to use training and testing dataset, and cross-validation later on!
+
+Test with only non-censored data:
+```{r}
+
+
+test2 <- apply(BRCA_mRNA, 1, cor, y = as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]))
+plot(test2, cex = 0.1)
+
+# gives indices:
+ordered <- order(test2, decreasing = TRUE)
+
+res <- apply(
+  BRCA_mRNA, 
+  2, 
+  function(x){
+    return(
+      mean(x[ordered[(0.5*length(ordered):length(ordered))]])
+      )
+    }
+  )
+plot(res, cex = 0.1, col = ifelse(as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300, "red", "green"))
+```
+
