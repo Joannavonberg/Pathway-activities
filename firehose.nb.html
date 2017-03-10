@@ -178,20 +178,36 @@ $(document).ready(function () {
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuQ05WX0dCTSA8LSByZWFkLnRhYmxlKFwiRG93bmxvYWRzL2dkYWMuYnJvYWRpbnN0aXR1dGUub3JnX0dCTS1UUC5Db3B5TnVtYmVyX0dpc3RpYzIuTGV2ZWxfNC4yMDE2MDEyODAwLjAuMC9hbGxfZGF0YV9ieV9nZW5lcy50eHRcIiwgaGVhZGVyID0gVFJVRSlcbmBgYCJ9 -->
 <pre class="r"><code>CNV_GBM &lt;- read.table(&quot;Downloads/gdac.broadinstitute.org_GBM-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt&quot;, header = TRUE)</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiY2Fubm90IG9wZW4gZmlsZSAnRG93bmxvYWRzL2dkYWMuYnJvYWRpbnN0aXR1dGUub3JnX0dCTS1UUC5Db3B5TnVtYmVyX0dpc3RpYzIuTGV2ZWxfNC4yMDE2MDEyODAwLjAuMC9hbGxfZGF0YV9ieV9nZW5lcy50eHQnOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5RXJyb3IgaW4gZmlsZShmaWxlLCBcInJ0XCIpIDogY2Fubm90IG9wZW4gdGhlIGNvbm5lY3Rpb25cbiJ9 -->
+<pre><code>cannot open file 'Downloads/gdac.broadinstitute.org_GBM-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt': No such file or directoryError in file(file, &quot;rt&quot;) : cannot open the connection</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gZGlzZWFzZXMpe1xuICBhc3NpZ24oc3ByaW50ZihcIiVzX0NOVlwiLCBkKSwgcmVhZC50YWJsZShzcHJpbnRmKFwiRG93bmxvYWRzL2dkYWMuYnJvYWRpbnN0aXR1dGUub3JnXyVzLVRQLkNvcHlOdW1iZXJfR2lzdGljMi5MZXZlbF80LjIwMTYwMTI4MDAuMC4wL2FsbF9kYXRhX2J5X2dlbmVzLnR4dFwiLCBkKSwgaGVhZGVyID0gVFJVRSkpXG59XG5gYGAifQ== -->
-<pre class="r"><code>for(d in diseases){
-  assign(sprintf(&quot;%s_CNV&quot;, d), read.table(sprintf(&quot;Downloads/gdac.broadinstitute.org_%s-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt&quot;, d), header = TRUE))
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXtcbiAgYXNzaWduKHNwcmludGYoXCIlc19DTlZcIiwgZCksIHJlYWQudGFibGUoc3ByaW50ZihcIi4uL0Rvd25sb2Fkcy9nZGFjLmJyb2FkaW5zdGl0dXRlLm9yZ18lcy1UUC5Db3B5TnVtYmVyX0dpc3RpYzIuTGV2ZWxfNC4yMDE2MDEyODAwLjAuMC9hbGxfZGF0YV9ieV9nZW5lcy50eHRcIiwgZCksIGhlYWRlciA9IFRSVUUpKVxufVxuYGBgIn0= -->
+<pre class="r"><code>for(d in names(diseases)){
+  assign(sprintf(&quot;%s_CNV&quot;, d), read.table(sprintf(&quot;../Downloads/gdac.broadinstitute.org_%s-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt&quot;, d), header = TRUE))
 }</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXtcbiAgICBzYXZlKGxpc3QgPSBzcHJpbnRmKFwiJXNfQ05WXCIsIGQpLCBmaWxlID0gc3ByaW50ZihcIi9ob21lL2FiaWRhdGEvSm9hbm5hLyVzL0NWTi8lc19DTlYudHh0XCIsIGQgZCkpXG5gYGAifQ== -->
+<pre class="r"><code>for(d in names(diseases)){
+    save(list = sprintf(&quot;%s_CNV&quot;, d), file = sprintf(&quot;/home/abidata/Joanna/%s/CVN/%s_CNV.txt&quot;, d d))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3I6IHVuZXhwZWN0ZWQgc3ltYm9sIGluOlxuXCJmb3IoZCBpbiBuYW1lcyhkaXNlYXNlcykpe1xuICAgIHNhdmUobGlzdCA9IHNwcmludGYoXCIlc19DTlZcIiwgZCksIGZpbGUgPSBzcHJpbnRmKFwiL2hvbWUvYWJpZGF0YS9Kb2FubmEvJXMvQ1ZOLyVzX0NOVi50eHRcIiwgZCBkXCJcbiJ9 -->
+<pre><code>Error: unexpected symbol in:
+&quot;for(d in names(diseases)){
+    save(list = sprintf(&quot;%s_CNV&quot;, d), file = sprintf(&quot;/home/abidata/Joanna/%s/CVN/%s_CNV.txt&quot;, d d&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiVXNpbmcgZmlyZWhvc2UgdG8gZG93bmxvYWQgYWxyZWFkeSBjb252ZXJ0ZWQgZGF0YSIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQpodHRwOi8vZ2RhYy5icm9hZGluc3RpdHV0ZS5vcmcvcnVucy9hbmFseXNlc19fbGF0ZXN0L3JlcG9ydHMvY2FuY2VyL0dCTS9Db3B5TnVtYmVyX0dpc3RpYzIvbm96emxlLmh0bWwKVGhlIGdlbmVzIHggc2FtcGxlcyBtYXRyaXggd2FzIGRvd25sb2FkZWQgZnJvbSBoZXJlLgpgYGB7cn0KQ05WX0dCTSA8LSByZWFkLnRhYmxlKCJEb3dubG9hZHMvZ2RhYy5icm9hZGluc3RpdHV0ZS5vcmdfR0JNLVRQLkNvcHlOdW1iZXJfR2lzdGljMi5MZXZlbF80LjIwMTYwMTI4MDAuMC4wL2FsbF9kYXRhX2J5X2dlbmVzLnR4dCIsIGhlYWRlciA9IFRSVUUpCmBgYAoKYGBge3J9CmZvcihkIGluIGRpc2Vhc2VzKXsKICBhc3NpZ24oc3ByaW50ZigiJXNfQ05WIiwgZCksIHJlYWQudGFibGUoc3ByaW50ZigiRG93bmxvYWRzL2dkYWMuYnJvYWRpbnN0aXR1dGUub3JnXyVzLVRQLkNvcHlOdW1iZXJfR2lzdGljMi5MZXZlbF80LjIwMTYwMTI4MDAuMC4wL2FsbF9kYXRhX2J5X2dlbmVzLnR4dCIsIGQpLCBoZWFkZXIgPSBUUlVFKSkKfQpgYGAKCg==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiVXNpbmcgZmlyZWhvc2UgdG8gZG93bmxvYWQgYWxyZWFkeSBjb252ZXJ0ZWQgZGF0YSIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQpodHRwOi8vZ2RhYy5icm9hZGluc3RpdHV0ZS5vcmcvcnVucy9hbmFseXNlc19fbGF0ZXN0L3JlcG9ydHMvY2FuY2VyL0dCTS9Db3B5TnVtYmVyX0dpc3RpYzIvbm96emxlLmh0bWwKVGhlIGdlbmVzIHggc2FtcGxlcyBtYXRyaXggd2FzIGRvd25sb2FkZWQgZnJvbSBoZXJlLgpgYGB7cn0KQ05WX0dCTSA8LSByZWFkLnRhYmxlKCIuLi9Eb3dubG9hZHMvZ2RhYy5icm9hZGluc3RpdHV0ZS5vcmdfR0JNLVRQLkNvcHlOdW1iZXJfR2lzdGljMi5MZXZlbF80LjIwMTYwMTI4MDAuMC4wL2FsbF9kYXRhX2J5X2dlbmVzLnR4dCIsIGhlYWRlciA9IFRSVUUpCmBgYAoKYGBge3J9CmZvcihkIGluIG5hbWVzKGRpc2Vhc2VzKSl7CiAgYXNzaWduKHNwcmludGYoIiVzX0NOViIsIGQpLCByZWFkLnRhYmxlKHNwcmludGYoIi4uL0Rvd25sb2Fkcy9nZGFjLmJyb2FkaW5zdGl0dXRlLm9yZ18lcy1UUC5Db3B5TnVtYmVyX0dpc3RpYzIuTGV2ZWxfNC4yMDE2MDEyODAwLjAuMC9hbGxfZGF0YV9ieV9nZW5lcy50eHQiLCBkKSwgaGVhZGVyID0gVFJVRSkpCn0KYGBgCgpgYGB7cn0KZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXsKICAgIHNhdmUobGlzdCA9IHNwcmludGYoIiVzX0NOViIsIGQpLCBmaWxlID0gc3ByaW50ZigiL2hvbWUvYWJpZGF0YS9Kb2FubmEvJXMvQ1ZOLyVzX0NOVi50eHQiLCBkLCBkKSkKICB9CmBgYAoK</div>
 
 
 
