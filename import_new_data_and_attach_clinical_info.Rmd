@@ -49,7 +49,8 @@ install.packages("devtools")
 library("devtools")#, lib = "../R/x86_64-pc-linux-gnu-library/3.3")
 install_github("RTCGA/RTCGA", build_vignettes = TRUE)
 
-diseases <- c("BRCA", "GBM", "OV")
+diseases <- c(TRUE, FALSE, TRUE)
+names(diseases) <- c("BRCA", "GBM", "OV")
 omics <- c("mRNA", "miRNASeq", "CNV", "methylation")
 a <- paste("RTCGA.", c("clinical", omics), sep = "")
 b <- paste(a, ".20160128", sep = "")
@@ -74,7 +75,7 @@ source("RTCGA_functions.R")
 AddSurvDataToOmics(diseases, omics, save = TRUE)
 
 # calculate the intersection (which patients have data for all omics types)
-for(dis in diseases){
+for(dis in names(diseases)){
   assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = TRUE))
 }
 ```
