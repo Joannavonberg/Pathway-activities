@@ -1,0 +1,52 @@
+---
+title: "First principal component of pathway mappable genes"
+output: html_notebook
+---
+
+I'm not sure what to do here:
+```{r}
+BRCA_mRNA <- BRCA_mRNA$data
+test <- prcomp(t(BRCA_mRNA)[,])
+pc.pred <- predict(test, newdata = t(BRCA_mRNA)[,])
+plot(pc.pred[,1], cex = 0.1, col = ifelse(as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300, "red", "green"))
+```
+Test with one pathway:
+```{r}
+pw1_genes <- entrez_hgnc[entrez_hgnc$entrezgene %in% kegg2[[1]], "hgnc_symbol"]
+pw1 <- BRCA_mRNA[rownames(BRCA_mRNA) %in% pw1_genes,]
+
+prcom <- prcomp(t(pw1))
+pc.pred <- predict(prcom, newdata = t(pw1))
+
+plot(pc.pred[,1], cex = 0.1, col = ifelse(as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300, "red", "green"))
+```
+
+```{r}
+ind2 <- BRCA_mRNA[rownames(BRCA_mRNA) %in% entrez_hgnc[entrez_hgnc$entrezgene %in% kegg2[[2]], "hgnc_symbol"],]
+pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
+
+test <- lapply(
+  kegg2,
+  function(pw_genes){
+    ind2 <- BRCA_mRNA[rownames(BRCA_mRNA) %in% entrez_hgnc[entrez_hgnc$entrezgene %in% pw_genes, "hgnc_symbol"],]
+    pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
+    names(pw2) <- NULL
+    return(pw2)
+  }
+)
+
+test3 <- lapply(
+  test,
+  function(x){
+    return(unlist(x))
+  }
+)
+
+test2 <- as.matrix(unlist(test), nrow = 229)
+
+test4 <- do.call(rbind, test)
+colnames(test4) <- rownames(BRCA_mRNA_patients)
+
+BRCA_mRNA_pw_pc1 <- test4
+```
+

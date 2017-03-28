@@ -1,0 +1,31 @@
+---
+title: "Getting normally distributed data"
+output: html_notebook
+---
+
+First checking to see which datasets likeley come from a normal distribution. Sequencing data is definitely not normally distributed, since they are counts.
+
+```{r}
+data <- BRCA_mRNA[1,]
+normal_dis <- rnorm(ncol(BRCA_mRNA), mean = mean(data), sd = sd(data))
+plot(density(data), main = "comparing data to normal distribution"); lines(density(normal_dis), col = "red"); legend("topright", legend = c("data", "normal distribution"), pch = 16, col = c("black", "red"))
+```
+
+```{r}
+qqnorm(data);qqline(data)
+```
+```{r}
+shapiro.test(data)
+```
+Based on the Shapiro-Wilk normality test, we can reject the null hypothesis that this example sample comes from a normal distribution. I could do this test for every dataset, however, I would probably find that all the data is not normally distributed.
+
+I'm using the *voom()* function from the *limma* package to convert sequencing data to a normal distribution. For this function, missing values are not allowed so I first need to impute missing values. But first, I need to take a closer look at the miRNAseq data. It turns out, the mRNAseq and miRNAseq data is already log2-transformed to bring it closer to a normal distribution (https://confluence.broadinstitute.org/display/GDAC/Documentation#Documentation-miRseqPipelines).
+
+```{r}
+complete_samples <- complete.cases(t(BRCA_miRNAseq))
+sum(!complete_samples)/ncol(BRCA_miRNAseq)
+```
+
+
+
+

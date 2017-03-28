@@ -1,0 +1,15 @@
+---
+title: "presentation 17-03-2017"
+output: html_notebook
+---
+
+```{r}
+for(o in "methylation"){
+  print(o)
+  png(sprintf("BRCA_%s_boxplot.png", o))
+  if(o == "CNV"){boxplot(t(get(sprintf("BRCA_%s", o))[1:5,c(-1,-2,-3)]))}
+  else{boxplot(get(sprintf("BRCA_%s", o))[,1:6])}
+  dev.off()
+}
+```
+
