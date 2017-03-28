@@ -203,21 +203,113 @@ W = 0.98507, p-value = 9.758e-06</code></pre>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>Based on the Shapiro-Wilk normality test, we can reject the null hypothesis that this example sample comes from a normal distribution. I could do this test for every dataset, however, I would probably find that all the data is not normally distributed.</p>
-<p>I’m using the <em>voom()</em> function from the <em>limma</em> package to convert sequencing data to a normal distribution. For this function, missing values are not allowed so I first need to impute missing values. But first, I need to take a closer look at the miRNAseq data. It turns out, the mRNAseq and miRNAseq data is already log2-transformed to bring it closer to a normal distribution (<a href="https://confluence.broadinstitute.org/display/GDAC/Documentation#Documentation-miRseqPipelines" class="uri">https://confluence.broadinstitute.org/display/GDAC/Documentation#Documentation-miRseqPipelines</a>).</p>
+<p>I’m using the <em>voom()</em> function from the <em>limma</em> package to convert sequencing data to a normal distribution. For this function, missing values are not allowed so I first need to impute missing values. But first, I need to take a closer look at the miRNAseq data. It turns out, the mRNAseq and miRNAseq data is already log2-transformed to bring it closer to a normal distribution (<a href="https://confluence.broadinstitute.org/display/GDAC/Documentation#Documentation-miRseqPipelines" class="uri">https://confluence.broadinstitute.org/display/GDAC/Documentation#Documentation-miRseqPipelines</a>). But for miRNAseq, also the old data is saved so I need to extract the transformed data:</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3VtKCFjb21wbGV0ZV9zYW1wbGVzKS9uY29sKEJSQ0FfbWlSTkFzZXEpXG5cbmBgYCJ9 -->
-<pre class="r"><code>sum(!complete_samples)/ncol(BRCA_miRNAseq)
-</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXtcbiAgb2JqIDwtIGdldChzcHJpbnRmKFwiJXNfbWlSTkFzZXFcIiwgZCkpXG4gIGFzc2lnbihzcHJpbnRmKFwiJXNfbWlSTkFzZXEyXCIsIGQpLCBvYmpbLHNlcShmcm9tID0gMiwgdG8gPSBuY29sKG9iaiksIGJ5ID0gMyldKVxufVxuYGBgIn0= -->
+<pre class="r"><code>for(d in names(diseases)){
+  obj &lt;- get(sprintf(&quot;%s_miRNAseq&quot;, d))
+  assign(sprintf(&quot;%s_miRNAseq2&quot;, d), obj[,seq(from = 2, to = ncol(obj), by = 3)])
+}</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDAuMzMzMzMzM1xuIn0= -->
-<pre><code>[1] 0.3333333</code></pre>
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXtcbiAgYXNzaWduKHNwcmludGYoXCIlc19taVJOQXNlcVwiLCBkKSwgZ2V0KHNwcmludGYoXCIlc19taVJOQXNlcTJcIiwgZCkpKVxufVxuYGBgIn0= -->
+<pre class="r"><code>for(d in names(diseases)){
+  assign(sprintf(&quot;%s_miRNAseq&quot;, d), get(sprintf(&quot;%s_miRNAseq2&quot;, d)))
+}</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>CNV data is also in some sort of log2 transformed form, with the addition that 2 is subtracted from all values so that a value of 0 means no change from the normal copy number of 2. This means all data is already transformed to get it as close as possible to a normal distribution.</p>
+<p>Some rows are completely filled with NA’s. To correct this:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXtcbiAgZm9yKG8gaW4gb21pY3Mpe1xuICAgIG9iam5hbWUgPC0gc3ByaW50ZihcIiVzXyVzXCIsIGQsIG8pXG4gICAgcHJpbnQob2JqbmFtZSlcbiAgICBpZihleGlzdHMob2JqbmFtZSkpe1xuICAgICAgb2JqIDwtIGdldChvYmpuYW1lKVxuICAgICAgYXNzaWduKG9iam5hbWUsIG9ialtjb21wbGV0ZS5jYXNlcyhvYmopLF0pXG4gICAgfVxuICB9XG59XG5gYGAifQ== -->
+<pre class="r"><code>for(d in names(diseases)){
+  for(o in omics){
+    objname &lt;- sprintf(&quot;%s_%s&quot;, d, o)
+    print(objname)
+    if(exists(objname)){
+      obj &lt;- get(objname)
+      assign(objname, obj[complete.cases(obj),])
+    }
+  }
+}</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiQlJDQV9tUk5BXCJcblsxXSBcIkJSQ0FfbVJOQXNlcVwiXG5bMV0gXCJCUkNBX21pUk5BXCJcblsxXSBcIkJSQ0FfbWlSTkFzZXFcIlxuWzFdIFwiQlJDQV9DTlZcIlxuWzFdIFwiQlJDQV9tZXRoeWxhdGlvblwiXG5bMV0gXCJHQk1fbVJOQVwiXG5bMV0gXCJHQk1fbVJOQXNlcVwiXG5bMV0gXCJHQk1fbWlSTkFcIlxuWzFdIFwiR0JNX21pUk5Bc2VxXCJcblsxXSBcIkdCTV9DTlZcIlxuWzFdIFwiR0JNX21ldGh5bGF0aW9uXCJcblsxXSBcIk9WX21STkFcIlxuWzFdIFwiT1ZfbVJOQXNlcVwiXG5bMV0gXCJPVl9taVJOQVwiXG5bMV0gXCJPVl9taVJOQXNlcVwiXG5bMV0gXCJPVl9DTlZcIlxuWzFdIFwiT1ZfbWV0aHlsYXRpb25cIlxuWzFdIFwiUFJBRF9tUk5BXCJcblsxXSBcIlBSQURfbVJOQXNlcVwiXG5bMV0gXCJQUkFEX21pUk5BXCJcblsxXSBcIlBSQURfbWlSTkFzZXFcIlxuWzFdIFwiUFJBRF9DTlZcIlxuWzFdIFwiUFJBRF9tZXRoeWxhdGlvblwiXG4ifQ== -->
+<pre><code>[1] &quot;BRCA_mRNA&quot;
+[1] &quot;BRCA_mRNAseq&quot;
+[1] &quot;BRCA_miRNA&quot;
+[1] &quot;BRCA_miRNAseq&quot;
+[1] &quot;BRCA_CNV&quot;
+[1] &quot;BRCA_methylation&quot;
+[1] &quot;GBM_mRNA&quot;
+[1] &quot;GBM_mRNAseq&quot;
+[1] &quot;GBM_miRNA&quot;
+[1] &quot;GBM_miRNAseq&quot;
+[1] &quot;GBM_CNV&quot;
+[1] &quot;GBM_methylation&quot;
+[1] &quot;OV_mRNA&quot;
+[1] &quot;OV_mRNAseq&quot;
+[1] &quot;OV_miRNA&quot;
+[1] &quot;OV_miRNAseq&quot;
+[1] &quot;OV_CNV&quot;
+[1] &quot;OV_methylation&quot;
+[1] &quot;PRAD_mRNA&quot;
+[1] &quot;PRAD_mRNAseq&quot;
+[1] &quot;PRAD_miRNA&quot;
+[1] &quot;PRAD_miRNAseq&quot;
+[1] &quot;PRAD_CNV&quot;
+[1] &quot;PRAD_methylation&quot;</code></pre>
 <!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Now we can impute missing values:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBiaW9jTGl0ZShcImltcHV0ZVwiKVxubGlicmFyeShpbXB1dGUpXG5gYGAifQ== -->
+<pre class="r"><code># biocLite(&quot;impute&quot;)
+library(impute)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXtcbiAgZm9yKG8gaW4gb21pY3NbLTVdKXtcbiAgICBvYmpuYW1lIDwtIHNwcmludGYoXCIlc18lc1wiLCBkLCBvKVxuICAgIGlmKGV4aXN0cyhvYmpuYW1lKSl7XG4gICAgICBvYmogPC0gZ2V0KG9iam5hbWUpXG4gICAgICBhc3NpZ24ob2JqbmFtZSwgb2JqW2NvbXBsZXRlLmNhc2VzKG9iaiksXSlcbiAgICAgIHByaW50KGQpXG4gICAgICBwcmludChvKVxuICAgICAgYXNzaWduKFxuICAgICAgICBzcHJpbnRmKFwiJXNfJXNfaW1wdXRlZFwiLCBkLCBvKSxcbiAgICAgICAgaW1wdXRlLmtubihvYmopLFxuICAgICAgICBlbnZpciA9IC5HbG9iYWxFbnZcbiAgICAgIClcbiAgICB9XG4gIH1cbn1cbmBgYCJ9 -->
+<pre class="r"><code>for(d in names(diseases)){
+  for(o in omics[-5]){
+    objname &lt;- sprintf(&quot;%s_%s&quot;, d, o)
+    if(exists(objname)){
+      obj &lt;- get(objname)
+      assign(objname, obj[complete.cases(obj),])
+      print(d)
+      print(o)
+      assign(
+        sprintf(&quot;%s_%s_imputed&quot;, d, o),
+        impute.knn(obj),
+        envir = .GlobalEnv
+      )
+    }
+  }
+}</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXtcbiAgZm9yKG8gaW4gb21pY3NbLTVdKXtcbiAgICBpZihleGlzdHMoc3ByaW50ZihcIiVzXyVzX2ltcHV0ZWRcIiwgZCwgbykpKXtcbiAgICAgIGFzc2lnbihzcHJpbnRmKFwiJXNfJXNcIiwgZCwgbyksIGdldChzcHJpbnRmKFwiJXNfJXNfaW1wdXRlZFwiLCBkLCBvKSkkZGF0YSlcbiAgICB9XG4gIH1cbn1cbmBgYCJ9 -->
+<pre class="r"><code>for(d in names(diseases)){
+  for(o in omics[-5]){
+    if(exists(sprintf(&quot;%s_%s_imputed&quot;, d, o))){
+      assign(sprintf(&quot;%s_%s&quot;, d, o), get(sprintf(&quot;%s_%s_imputed&quot;, d, o))$data)
+    }
+  }
+}</code></pre>
+<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiR2V0dGluZyBub3JtYWxseSBkaXN0cmlidXRlZCBkYXRhIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpGaXJzdCBjaGVja2luZyB0byBzZWUgd2hpY2ggZGF0YXNldHMgbGlrZWxleSBjb21lIGZyb20gYSBub3JtYWwgZGlzdHJpYnV0aW9uLiBTZXF1ZW5jaW5nIGRhdGEgaXMgZGVmaW5pdGVseSBub3Qgbm9ybWFsbHkgZGlzdHJpYnV0ZWQsIHNpbmNlIHRoZXkgYXJlIGNvdW50cy4KCmBgYHtyfQpkYXRhIDwtIEJSQ0FfbVJOQVsxLF0Kbm9ybWFsX2RpcyA8LSBybm9ybShuY29sKEJSQ0FfbVJOQSksIG1lYW4gPSBtZWFuKGRhdGEpLCBzZCA9IHNkKGRhdGEpKQpwbG90KGRlbnNpdHkoZGF0YSksIG1haW4gPSAiY29tcGFyaW5nIGRhdGEgdG8gbm9ybWFsIGRpc3RyaWJ1dGlvbiIpOyBsaW5lcyhkZW5zaXR5KG5vcm1hbF9kaXMpLCBjb2wgPSAicmVkIik7IGxlZ2VuZCgidG9wcmlnaHQiLCBsZWdlbmQgPSBjKCJkYXRhIiwgIm5vcm1hbCBkaXN0cmlidXRpb24iKSwgcGNoID0gMTYsIGNvbCA9IGMoImJsYWNrIiwgInJlZCIpKQpgYGAKCmBgYHtyfQpxcW5vcm0oZGF0YSk7cXFsaW5lKGRhdGEpCmBgYApgYGB7cn0Kc2hhcGlyby50ZXN0KGRhdGEpCmBgYApCYXNlZCBvbiB0aGUgU2hhcGlyby1XaWxrIG5vcm1hbGl0eSB0ZXN0LCB3ZSBjYW4gcmVqZWN0IHRoZSBudWxsIGh5cG90aGVzaXMgdGhhdCB0aGlzIGV4YW1wbGUgc2FtcGxlIGNvbWVzIGZyb20gYSBub3JtYWwgZGlzdHJpYnV0aW9uLiBJIGNvdWxkIGRvIHRoaXMgdGVzdCBmb3IgZXZlcnkgZGF0YXNldCwgaG93ZXZlciwgSSB3b3VsZCBwcm9iYWJseSBmaW5kIHRoYXQgYWxsIHRoZSBkYXRhIGlzIG5vdCBub3JtYWxseSBkaXN0cmlidXRlZC4KCkknbSB1c2luZyB0aGUgKnZvb20oKSogZnVuY3Rpb24gZnJvbSB0aGUgKmxpbW1hKiBwYWNrYWdlIHRvIGNvbnZlcnQgc2VxdWVuY2luZyBkYXRhIHRvIGEgbm9ybWFsIGRpc3RyaWJ1dGlvbi4gRm9yIHRoaXMgZnVuY3Rpb24sIG1pc3NpbmcgdmFsdWVzIGFyZSBub3QgYWxsb3dlZCBzbyBJIGZpcnN0IG5lZWQgdG8gaW1wdXRlIG1pc3NpbmcgdmFsdWVzLiBCdXQgZmlyc3QsIEkgbmVlZCB0byB0YWtlIGEgY2xvc2VyIGxvb2sgYXQgdGhlIG1pUk5Bc2VxIGRhdGEuIEl0IHR1cm5zIG91dCwgdGhlIG1STkFzZXEgYW5kIG1pUk5Bc2VxIGRhdGEgaXMgYWxyZWFkeSBsb2cyLXRyYW5zZm9ybWVkIHRvIGJyaW5nIGl0IGNsb3NlciB0byBhIG5vcm1hbCBkaXN0cmlidXRpb24gKGh0dHBzOi8vY29uZmx1ZW5jZS5icm9hZGluc3RpdHV0ZS5vcmcvZGlzcGxheS9HREFDL0RvY3VtZW50YXRpb24jRG9jdW1lbnRhdGlvbi1taVJzZXFQaXBlbGluZXMpLgoKYGBge3J9CmNvbXBsZXRlX3NhbXBsZXMgPC0gY29tcGxldGUuY2FzZXModChCUkNBX21pUk5Bc2VxKSkKc3VtKCFjb21wbGV0ZV9zYW1wbGVzKS9uY29sKEJSQ0FfbWlSTkFzZXEpCmBgYAoKCgoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiR2V0dGluZyBub3JtYWxseSBkaXN0cmlidXRlZCBkYXRhIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpGaXJzdCBjaGVja2luZyB0byBzZWUgd2hpY2ggZGF0YXNldHMgbGlrZWxleSBjb21lIGZyb20gYSBub3JtYWwgZGlzdHJpYnV0aW9uLiBTZXF1ZW5jaW5nIGRhdGEgaXMgZGVmaW5pdGVseSBub3Qgbm9ybWFsbHkgZGlzdHJpYnV0ZWQsIHNpbmNlIHRoZXkgYXJlIGNvdW50cy4KCmBgYHtyfQpkYXRhIDwtIEJSQ0FfbVJOQVsxLF0Kbm9ybWFsX2RpcyA8LSBybm9ybShuY29sKEJSQ0FfbVJOQSksIG1lYW4gPSBtZWFuKGRhdGEpLCBzZCA9IHNkKGRhdGEpKQpwbG90KGRlbnNpdHkoZGF0YSksIG1haW4gPSAiY29tcGFyaW5nIGRhdGEgdG8gbm9ybWFsIGRpc3RyaWJ1dGlvbiIpOyBsaW5lcyhkZW5zaXR5KG5vcm1hbF9kaXMpLCBjb2wgPSAicmVkIik7IGxlZ2VuZCgidG9wcmlnaHQiLCBsZWdlbmQgPSBjKCJkYXRhIiwgIm5vcm1hbCBkaXN0cmlidXRpb24iKSwgcGNoID0gMTYsIGNvbCA9IGMoImJsYWNrIiwgInJlZCIpKQpgYGAKCmBgYHtyfQpxcW5vcm0oZGF0YSk7cXFsaW5lKGRhdGEpCmBgYApgYGB7cn0Kc2hhcGlyby50ZXN0KGRhdGEpCmBgYApCYXNlZCBvbiB0aGUgU2hhcGlyby1XaWxrIG5vcm1hbGl0eSB0ZXN0LCB3ZSBjYW4gcmVqZWN0IHRoZSBudWxsIGh5cG90aGVzaXMgdGhhdCB0aGlzIGV4YW1wbGUgc2FtcGxlIGNvbWVzIGZyb20gYSBub3JtYWwgZGlzdHJpYnV0aW9uLiBJIGNvdWxkIGRvIHRoaXMgdGVzdCBmb3IgZXZlcnkgZGF0YXNldCwgaG93ZXZlciwgSSB3b3VsZCBwcm9iYWJseSBmaW5kIHRoYXQgYWxsIHRoZSBkYXRhIGlzIG5vdCBub3JtYWxseSBkaXN0cmlidXRlZC4KCkknbSB1c2luZyB0aGUgKnZvb20oKSogZnVuY3Rpb24gZnJvbSB0aGUgKmxpbW1hKiBwYWNrYWdlIHRvIGNvbnZlcnQgc2VxdWVuY2luZyBkYXRhIHRvIGEgbm9ybWFsIGRpc3RyaWJ1dGlvbi4gRm9yIHRoaXMgZnVuY3Rpb24sIG1pc3NpbmcgdmFsdWVzIGFyZSBub3QgYWxsb3dlZCBzbyBJIGZpcnN0IG5lZWQgdG8gaW1wdXRlIG1pc3NpbmcgdmFsdWVzLiBCdXQgZmlyc3QsIEkgbmVlZCB0byB0YWtlIGEgY2xvc2VyIGxvb2sgYXQgdGhlIG1pUk5Bc2VxIGRhdGEuIEl0IHR1cm5zIG91dCwgdGhlIG1STkFzZXEgYW5kIG1pUk5Bc2VxIGRhdGEgaXMgYWxyZWFkeSBsb2cyLXRyYW5zZm9ybWVkIHRvIGJyaW5nIGl0IGNsb3NlciB0byBhIG5vcm1hbCBkaXN0cmlidXRpb24gKGh0dHBzOi8vY29uZmx1ZW5jZS5icm9hZGluc3RpdHV0ZS5vcmcvZGlzcGxheS9HREFDL0RvY3VtZW50YXRpb24jRG9jdW1lbnRhdGlvbi1taVJzZXFQaXBlbGluZXMpLiBCdXQgZm9yIG1pUk5Bc2VxLCBhbHNvIHRoZSBvbGQgZGF0YSBpcyBzYXZlZCBzbyBJIG5lZWQgdG8gZXh0cmFjdCB0aGUgdHJhbnNmb3JtZWQgZGF0YToKCmBgYHtyfQpmb3IoZCBpbiBuYW1lcyhkaXNlYXNlcykpewogIG9iaiA8LSBnZXQoc3ByaW50ZigiJXNfbWlSTkFzZXEiLCBkKSkKICBhc3NpZ24oc3ByaW50ZigiJXNfbWlSTkFzZXEyIiwgZCksIG9ialssc2VxKGZyb20gPSAyLCB0byA9IG5jb2wob2JqKSwgYnkgPSAzKV0pCn0KYGBgCmBgYHtyfQpmb3IoZCBpbiBuYW1lcyhkaXNlYXNlcykpewogIGFzc2lnbihzcHJpbnRmKCIlc19taVJOQXNlcSIsIGQpLCBnZXQoc3ByaW50ZigiJXNfbWlSTkFzZXEyIiwgZCkpKQp9CmBgYAoKQ05WIGRhdGEgaXMgYWxzbyBpbiBzb21lIHNvcnQgb2YgbG9nMiB0cmFuc2Zvcm1lZCBmb3JtLCB3aXRoIHRoZSBhZGRpdGlvbiB0aGF0IDIgaXMgc3VidHJhY3RlZCBmcm9tIGFsbCB2YWx1ZXMgc28gdGhhdCBhIHZhbHVlIG9mIDAgbWVhbnMgbm8gY2hhbmdlIGZyb20gdGhlIG5vcm1hbCBjb3B5IG51bWJlciBvZiAyLiBUaGlzIG1lYW5zIGFsbCBkYXRhIGlzIGFscmVhZHkgdHJhbnNmb3JtZWQgdG8gZ2V0IGl0IGFzIGNsb3NlIGFzIHBvc3NpYmxlIHRvIGEgbm9ybWFsIGRpc3RyaWJ1dGlvbi4KClNvbWUgcm93cyBhcmUgY29tcGxldGVseSBmaWxsZWQgd2l0aCBOQSdzLiBUbyBjb3JyZWN0IHRoaXM6CmBgYHtyfQpmb3IoZCBpbiBuYW1lcyhkaXNlYXNlcykpewogIGZvcihvIGluIG9taWNzKXsKICAgIG9iam5hbWUgPC0gc3ByaW50ZigiJXNfJXMiLCBkLCBvKQogICAgcHJpbnQob2JqbmFtZSkKICAgIGlmKGV4aXN0cyhvYmpuYW1lKSl7CiAgICAgIG9iaiA8LSBnZXQob2JqbmFtZSkKICAgICAgYXNzaWduKG9iam5hbWUsIG9ialtjb21wbGV0ZS5jYXNlcyhvYmopLF0pCiAgICB9CiAgfQp9CmBgYAoKCk5vdyB3ZSBjYW4gaW1wdXRlIG1pc3NpbmcgdmFsdWVzOgpgYGB7cn0KIyBiaW9jTGl0ZSgiaW1wdXRlIikKbGlicmFyeShpbXB1dGUpCmBgYApgYGB7cn0KZm9yKGQgaW4gbmFtZXMoZGlzZWFzZXMpKXsKICBmb3IobyBpbiBvbWljc1stNV0pewogICAgb2JqbmFtZSA8LSBzcHJpbnRmKCIlc18lcyIsIGQsIG8pCiAgICBpZihleGlzdHMob2JqbmFtZSkpewogICAgICBvYmogPC0gZ2V0KG9iam5hbWUpCiAgICAgIGFzc2lnbihvYmpuYW1lLCBvYmpbY29tcGxldGUuY2FzZXMob2JqKSxdKQogICAgICBwcmludChkKQogICAgICBwcmludChvKQogICAgICBhc3NpZ24oCiAgICAgICAgc3ByaW50ZigiJXNfJXNfaW1wdXRlZCIsIGQsIG8pLAogICAgICAgIGltcHV0ZS5rbm4ob2JqKSwKICAgICAgICBlbnZpciA9IC5HbG9iYWxFbnYKICAgICAgKQogICAgfQogIH0KfQpgYGAKCmBgYHtyfQpmb3IoZCBpbiBuYW1lcyhkaXNlYXNlcykpewogIGZvcihvIGluIG9taWNzWy01XSl7CiAgICBpZihleGlzdHMoc3ByaW50ZigiJXNfJXNfaW1wdXRlZCIsIGQsIG8pKSl7CiAgICAgIGFzc2lnbihzcHJpbnRmKCIlc18lcyIsIGQsIG8pLCBnZXQoc3ByaW50ZigiJXNfJXNfaW1wdXRlZCIsIGQsIG8pKSRkYXRhKQogICAgfQogIH0KfQpgYGAKCg==</div>
 
 
 

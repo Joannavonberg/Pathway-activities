@@ -19,13 +19,68 @@ shapiro.test(data)
 ```
 Based on the Shapiro-Wilk normality test, we can reject the null hypothesis that this example sample comes from a normal distribution. I could do this test for every dataset, however, I would probably find that all the data is not normally distributed.
 
-I'm using the *voom()* function from the *limma* package to convert sequencing data to a normal distribution. For this function, missing values are not allowed so I first need to impute missing values. But first, I need to take a closer look at the miRNAseq data. It turns out, the mRNAseq and miRNAseq data is already log2-transformed to bring it closer to a normal distribution (https://confluence.broadinstitute.org/display/GDAC/Documentation#Documentation-miRseqPipelines).
+I'm using the *voom()* function from the *limma* package to convert sequencing data to a normal distribution. For this function, missing values are not allowed so I first need to impute missing values. But first, I need to take a closer look at the miRNAseq data. It turns out, the mRNAseq and miRNAseq data is already log2-transformed to bring it closer to a normal distribution (https://confluence.broadinstitute.org/display/GDAC/Documentation#Documentation-miRseqPipelines). But for miRNAseq, also the old data is saved so I need to extract the transformed data:
 
 ```{r}
-complete_samples <- complete.cases(t(BRCA_miRNAseq))
-sum(!complete_samples)/ncol(BRCA_miRNAseq)
+for(d in names(diseases)){
+  obj <- get(sprintf("%s_miRNAseq", d))
+  assign(sprintf("%s_miRNAseq2", d), obj[,seq(from = 2, to = ncol(obj), by = 3)])
+}
+```
+```{r}
+for(d in names(diseases)){
+  assign(sprintf("%s_miRNAseq", d), get(sprintf("%s_miRNAseq2", d)))
+}
+```
+
+CNV data is also in some sort of log2 transformed form, with the addition that 2 is subtracted from all values so that a value of 0 means no change from the normal copy number of 2. This means all data is already transformed to get it as close as possible to a normal distribution.
+
+Some rows are completely filled with NA's. To correct this:
+```{r}
+for(d in names(diseases)){
+  for(o in omics){
+    objname <- sprintf("%s_%s", d, o)
+    print(objname)
+    if(exists(objname)){
+      obj <- get(objname)
+      assign(objname, obj[complete.cases(obj),])
+    }
+  }
+}
 ```
 
 
+Now we can impute missing values:
+```{r}
+# biocLite("impute")
+library(impute)
+```
+```{r}
+for(d in names(diseases)){
+  for(o in omics[-5]){
+    objname <- sprintf("%s_%s", d, o)
+    if(exists(objname)){
+      obj <- get(objname)
+      assign(objname, obj[complete.cases(obj),])
+      print(d)
+      print(o)
+      assign(
+        sprintf("%s_%s_imputed", d, o),
+        impute.knn(obj),
+        envir = .GlobalEnv
+      )
+    }
+  }
+}
+```
 
+```{r}
+for(d in names(diseases)){
+  for(o in omics[-5]){
+    if(exists(sprintf("%s_%s_imputed", d, o))){
+      assign(sprintf("%s_%s", d, o), get(sprintf("%s_%s_imputed", d, o))$data)
+    }
+  }
+}
+```
 
