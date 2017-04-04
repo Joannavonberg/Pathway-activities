@@ -20,7 +20,6 @@ pc.pred <- predict(prcom, newdata = t(pw1))
 
 plot(pc.pred[,1], cex = 0.1, col = ifelse(as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300, "red", "green"))
 ```
-
 ```{r}
 ind2 <- BRCA_mRNA[rownames(BRCA_mRNA) %in% entrez_hgnc[entrez_hgnc$entrezgene %in% kegg2[[2]], "hgnc_symbol"],]
 pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
@@ -42,6 +41,8 @@ test3 <- lapply(
   }
 )
 
+test4 <- cbind(test)
+
 test2 <- as.matrix(unlist(test), nrow = 229)
 
 test4 <- do.call(rbind, test)
@@ -50,3 +51,93 @@ colnames(test4) <- rownames(BRCA_mRNA_patients)
 BRCA_mRNA_pw_pc1 <- test4
 ```
 
+```{r}
+FirstPCPerPathway <- function(data, patients, lookup = entrez_hgnc, pwlist = kegg2){
+  res <- do.call(rbind, 
+                 lapply(
+                   pwlist,
+                   function(pw_genes){
+                     ind2 <- data[
+                       rownames(data) %in% lookup[
+                         lookup$entrezgene %in% pw_genes, "hgnc_symbol"
+                         ],
+                       ]
+                     pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
+                     names(pw2) <- NULL
+                     return(pw2)
+                   }
+                 )
+  )
+  colnames(res) <- rownames(patients)
+  return(res)
+}
+```
+
+```{r}
+BRCA_mRNA_pc1 <- FirstPCPerPathway(BRCA_mRNA_corrected, BRCA_mRNA_patients)
+```
+
+```{r}
+for(d in names(diseases)[-1]){
+  print(d)
+  for(o in omics[c(-2, -3, -4)]){
+    print(o)
+    dis_om <- sprintf("%s_%s", d, o)
+    if(exists(dis_om)){
+      assign(sprintf("%s_%s_pc1", d, o), 
+             FirstPCPerPathway(data = get(dis_om), patients = get(sprintf("%s_patients", dis_om)))
+      )
+    }
+  }
+}
+```
+I need to set the rownames for CNV data to the gene names, maybe remove the second and third row?
+
+```{r}
+for(d in names(diseases)){
+  objname <- sprintf("%s_CNV", d)
+  obj <- get(objname)
+  rownames(obj) <- obj[,1]
+  assign(objname, obj[,c(-1, -2, -3)])
+}
+```
+Same for the CNV patients dataframes:
+
+```{r}
+for(d in names(diseases)){
+  objname <- sprintf("%s_CNV_patients", d)
+  obj <- get(objname)
+  assign(objname, obj[c(-1, -2, -3),])
+}
+```
+
+Conclusion: for mRNA, CNV and methylation this already works. =) Now I need to find out what gene names are used for the sequencing data, and look up the gene targets of the microRNA's.
+
+30-03-2017
+
+The row names of the mRNAseq data are build up as follows: hgnc|entrez
+
+```{r}
+for(d in names(diseases)){
+  print(d)
+  objname <- sprintf("%s_mRNAseq", d)
+  obj <- get(objname)
+  rownames(obj) <- unlist(strsplit(rownames(obj), split = "[|]"))[seq(2, 2*nrow(obj), by = 2)]
+  assign(objname, obj)
+}
+```
+
+```{r}
+o <- "mRNAseq"
+for(d in names(diseases)){
+  print(d)
+  dis_om <- sprintf("%s_%s", d, o)
+  if(exists(dis_om)){
+    assign(sprintf("%s_%s_pc1", d, o), 
+           FirstPCPerPathway(data = get(dis_om), patients = get(sprintf("%s_patients", dis_om)), mseq = TRUE)
+    )
+  }
+}
+```
+
+Now I need to look up gene targets for miRNA's.
