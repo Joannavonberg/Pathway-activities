@@ -1,0 +1,25 @@
+---
+title: "Thinking about how to connect miRNA's to pathways"
+output: html_notebook
+---
+
+30-03-2017
+
+miRNa's target mRNA's. The predicted miRNA-gene interactions are biased. Read "Pathway analysis from lists of microRNAs: common pitfalls and alternative strategy" and "Integrated gene set analysis for microRNA studies"
+
+```{r}
+# biocLite("targetscan.Hs.eg.db")
+library("targetscan.Hs.eg.db")
+```
+
+03-04-2017
+
+Godard et al show that first looking up miRNA target genes and then doing pathway analysis is biased and is not the best way. They suggest to convert the pathway gene lists to pathway miRNA lists, and do pathway analysis directly on the miRNA data. This prevents miRNA's being 'counted double' since every miRNA will only show up once in a pathway list. But, maybe this double counting is actually biologically relevant. 
+
+Maybe it would be an idea to incorporate something like the correlation between a miRNA and its target gene. Or is there a linear relation between amount of miRNA present and amount of mRNA target present?
+
+For now, the idea is:
+
+- I've got a list of pathways with their respective genes
+- I've got a list of miRNA's (the full outer join of the rownames of all miRNA datasets)
+- I need a lookup table to connect miRNA's and their target genes / mRNA's
