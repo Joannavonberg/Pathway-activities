@@ -86,28 +86,65 @@ rownames(entrez_hgnc) <- entrez_hgnc$hgnc_symbol
 ```
 The test:
 ```{r}
-entrez_BRCA_mRNA <- entrez_hgnc[colnames(BRCA_mRNA), "entrezgene"]
-names(entrez_BRCA_mRNA) <- colnames(BRCA_mRNA)
+entrez_BRCA_mRNA <- entrez_hgnc[rownames(BRCA_mRNA), "entrezgene"]
+names(entrez_BRCA_mRNA) <- rownames(BRCA_mRNA)
 pw1_genes <- entrez_BRCA_mRNA[as.numeric(kegg2[[1]])]
-pathway1_BRCA_mRNA <- apply(BRCA_mRNA[,names(pw1_genes)], 1, mean)
+# pathway1_BRCA_mRNA <- apply(BRCA_mRNA[names(pw1_genes),], 1, mean)
 ```
 
 ```{r}
 PathwaysMrna <- function(i){
-  ind <- colnames(BRCA_mRNA) %in% names(entrez_BRCA_mRNA[as.numeric(kegg2[[i]])])
+  ind <- rownames(BRCA_mRNA) %in% names(entrez_BRCA_mRNA[as.numeric(kegg2[[i]])])
   if(sum(ind) == 0){return(NULL)}
-  if(sum(ind) == 1){return(BRCA_mRNA[,ind])}
-  return(apply(BRCA_mRNA[,ind], 1, mean))
+  if(sum(ind) == 1){return(BRCA_mRNA[ind,])}
+  return(apply(BRCA_mRNA[ind,], 2, mean))
 }
 vPathwaysMrna <- Vectorize(PathwaysMrna)
 ```
 Rewrite the above function to return just one pathway, and cbind the results
 ```{r}
-test4pathways <- vPathwaysMrna(1:229)
-colnames(test4pathways) <- names(kegg2)
+test4pathways <- vPathwaysMrna(1:4)
+colnames(test4pathways) <- names(kegg2[1:4])
 ```
 
 A few thoughts:
 
 * If I'm collapsing the data on pathways, what is the effect of some data sources having data for a particular gene in a particular pathway and others not having data for that particular gene? Would it be best to remove that gene altogether or not?
-* 
+
+13-03-2017
+```{r}
+# objname <- sprintf("entrez_%s_mRNA", d)
+# print(objname)
+# data <- get(sprintf("%s_mRNA", d))
+# assign(objname, entrez_hgnc[rownames(data), "entrezgene"])
+# obj <- get(objname)
+# names(obj) <- rownames(data)
+# all these objects are identical!
+entrez_mRNA <- entrez_hgnc[rownames(BRCA_mRNA), "entrezgene"]
+names(entrez_mRNA) <- rownames(BRCA_mRNA)
+```
+
+```{r}
+# BRCA_mRNA <- BRCA_mRNA_corrected
+# OV_mRNA <- OV_mRNA_corrected
+save(BRCA_mRNA, file = "/home/abidata/Joanna/BRCA/mRNA/BRCA_mRNA.rda")
+save(BRCA_mRNA_patients, file = "/home/abidata/Joanna/BRCA/mRNA/BRCA_mRNA_patients.rda")
+save(OV_mRNA, file = "/home/abidata/Joanna/OV/mRNA/OV_mRNA.rda")
+save(OV_mRNA_patients, file = "/home/abidata/Joanna/OV/mRNA/OV _mRNA_patients.rda")
+save(GBM_mRNA, file = "/home/abidata/Joanna/GBM/mRNA/GBM_mRNA.rda")
+save(GBM_mRNA_patients, file = "/home/abidata/Joanna/GBM/mRNA/GBM _mRNA_patients.rda")
+```
+
+
+```{r}
+for(d in diseases){
+  # objname <- sprintf("%s_mRNA_pathways", d)
+  # print(objname)
+  print(d)
+  obj <- PathwaysMrna(1:229, d)
+  # assign(objname, PathwaysMrna(1:229, d))
+  colnames(obj) <- names(kegg2)
+  assign(sprintf("%s_mRNA_pathways", d), obj)
+}
+```
+
