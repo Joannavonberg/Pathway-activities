@@ -168,6 +168,22 @@ PathwaysMrna <- Vectorize(function(i, dis, fun = mean()){
   return(apply(obj[ind,], 2, fun))
 })
 
+AveragePerPathway <- Vectorize(function(i, dis, om, fun = mean){
+  # print(sprintf("i is: %i", i))
+  obj <- get(sprintf("%s_%s", dis, om))
+  if(om == "miRNA" | om == "miRNASeq"){
+    ind <- rownames(obj) %in% gene_to_m
+  }
+  else{
+    ind <- rownames(obj) %in% entrez_hgnc[entrez_hgnc$entrezgene %in% as.numeric(kegg2[[i]]), 'hgnc_symbol']
+  }
+  # print(sum(ind))
+  if(sum(ind) == 0){return(NULL)}
+  if(sum(ind) == 1){return(obj[ind,])}
+  # print(mean(obj[ind,2]))
+  return(apply(obj[ind,], 2, fun))
+})
+
 FirstPCPerPathway <- function(om, data, patients, lookup = entrez_hgnc, pwlist = kegg2, mseq = FALSE){
   if(mseq){
     genes <- rownames(data)
