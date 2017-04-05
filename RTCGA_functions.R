@@ -39,8 +39,7 @@ GetPheno <- function(dis, save, newdata){
   censored <- ifelse(is.na(clin$patient.days_to_death),
                      TRUE,
                      FALSE)
-  df <- cbind(days, censored)
-  names(df) <- clin$patient.bcr_patient_barcode  
+  df <- data.frame(cbind(days, censored), row.names = clin$patient.bcr_patient_barcode)
   if(save){
     fn <- sprintf("%s_clinical.txt", dis)
     writeFile(df, fn)
@@ -78,7 +77,7 @@ GetOmicMat <- function(dis, om, save, newdata){
 }
 
 GetPatientsVec <- function(barcodes, save, fn){
-  res <- data.frame(patient_id = substr(barcodes, 1, 12), batch_id = as.factor(substr(barcodes, 22, 25)), row.names = toupper(barcodes))
+  res <- data.frame(patient_id = substr(barcodes, 1, 12), batch_id = as.factor(substr(barcodes, 6, 7)), row.names = toupper(barcodes))
   # res <- matrix(c(substr(barcodes, 1, 12), substr(barcodes, 22, 25)), ncol = 2, dimnames = list(barcodes))
   if(save){
     print(fn)
@@ -114,22 +113,24 @@ writeFile <- function(df, fn){
 FindIntersection <- function(omics, disease, save = FALSE){
   # might not be a good idea, to copy very large dataframes
   oms <- mget(paste(disease, omics, "patients", sep = "_"), envir = .GlobalEnv, ifnotfound = NA)
-  print(length(oms))
-  print("...")
+  # print(length(oms))
+  # print("...")
   i <- 1
   while(is.null(oms[[i]]) || is.na(oms[[i]])){
-    print(i)
+    # print(i)
     i = i + 1
   }
-  print("...")
-  res <- oms[[i]]$patient_id
+  # print("...")
+  res <- as.character(oms[[i]]$patient_id)
+  # print(res[1:4])
   # print(res[1:10])
   while(i <= length(oms) && !is.null(oms[[i]]) && !is.na(oms[[i]])){
-    res <- res[res %in% oms[[i]]$patient_id]
+    res <- res[res %in% as.character(oms[[i]]$patient_id)]
+    # print(res[1:2])
     i = i + 1
-    print(i)
+    # print(i)
   }
-  print("......")
+  # print("......")
   if(save){
     write(unique(res), sprintf("%s_%s_patients.txt", disease, paste0(omics, collapse = "-")))
   }
@@ -157,4 +158,39 @@ MakeBatchPlot <- function(){
   p <- ggplot(as.data.frame(pc.pred), aes(x=pc.pred[,1], y= pc.pred[,2], colour = as.numeric(new_pheno[BRCA_mRNA_patients$patient_id,"days"]))) + ggtitle("Batch Effects before Transformation") + labs(y = "PC1", x = "PC2", colour = "Classes") + geom_point(shape=19)
   p
   return(p)
+}
+
+PathwaysMrna <- Vectorize(function(i, dis, fun = mean()){
+  obj <- get(sprintf("%s_mRNA", dis))
+  ind <- rownames(obj) %in% names(entrez_mRNA[as.numeric(kegg2[[i]])])
+  if(sum(ind) == 0){return(NULL)}
+  if(sum(ind) == 1){return(obj[ind,])}
+  return(apply(obj[ind,], 2, fun))
+})
+
+FirstPCPerPathway <- function(om, data, patients, lookup = entrez_hgnc, pwlist = kegg2, mseq = FALSE){
+  if(mseq){
+    genes <- rownames(data)
+  }
+  if(om == "miRNA" | om == "miRNASeq"){
+    genes <- rownames(data)
+  }
+  else{
+    genes <- lookup[rownames(data), "entrezgene"]
+  }
+  res <- do.call(rbind, 
+                 lapply(
+                   pwlist,
+                   function(pw_genes){
+                     ind <- genes %in% pw_genes
+                     ind2 <- data[ind,]
+                     if(sum(ind) == 0){return(NULL)}
+                     pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
+                     names(pw2) <- NULL
+                     return(pw2)
+                   }
+                 )
+  )
+  colnames(res) <- rownames(patients)
+  return(res)
 }
