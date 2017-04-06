@@ -189,11 +189,58 @@ library(&quot;targetscan.Hs.eg.db&quot;)</code></pre>
 <ul>
 <li>I’ve got a list of pathways with their respective genes</li>
 <li>I’ve got a list of miRNA’s (the full outer join of the rownames of all miRNA datasets)</li>
-<li>I need a lookup table to connect miRNA’s and their target genes / mRNA’s</li>
+<li>I need a lookup table to connect miRNA’s and their target genes / mRNA’s (the suggested source mirDIP seems a good choice, it is a combination of several prediction databases)</li>
 </ul>
+<p>Downloaded all data from mirDIP:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY29sbnMgPC0gc2NhbihcIi9ob21lL2JpdC9iZXJnMC9taXJESVAvbWlyRElQLUFsbC1EYXRhLVZlcnNpb24xLjAvUkVBRE1FLnR4dFwiLCB3aGF0ID0gY2hhcmFjdGVyKCksIHNlcCA9IFwiXFxuXCIpWy0xXVxuYGBgIn0= -->
+<pre class="r"><code>colns &lt;- scan(&quot;/home/bit/berg0/mirDIP/mirDIP-All-Data-Version1.0/README.txt&quot;, what = character(), sep = &quot;\n&quot;)[-1]</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUmVhZCA3IGl0ZW1zXG4ifQ== -->
+<pre><code>Read 7 items</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2VuZV90b19taXIgPC0gcmVhZC50YWJsZShcIi9ob21lL2JpdC9iZXJnMC9taXJESVAvbWlyRElQLUFsbC1EYXRhLVZlcnNpb24xLjAvbWlyRElQLUFsbC1EYXRhLVZlcnNpb24xLjAudHh0XCIsIHNlcCA9IFwiXFx0XCIsIHF1b3RlID0gXCJcIilcbmNvbG5hbWVzKGdlbmVfdG9fbWlyKSA8LSBjb2xuc1xuYGBgIn0= -->
+<pre class="r"><code>gene_to_mir &lt;- read.table(&quot;/home/bit/berg0/mirDIP/mirDIP-All-Data-Version1.0/mirDIP-All-Data-Version1.0.txt&quot;, sep = &quot;\t&quot;, quote = &quot;&quot;)
+colnames(gene_to_mir) &lt;- colns</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Now I’ve also got a lookup table. =D</p>
+<p>Next thing to fix is getting a list of pathways with their respective miRNA’s that affect it. Approach: take pathway-gene list, per pathway look up targetting miRNA’s and put them in a new pathway-miRNA list.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuR2VuZVRvbWlSTkEgPC0gZnVuY3Rpb24ocHdnZW5lcywgaGlnaF9jb25mLCBsb29rdXAgPSBnZW5lX3RvX21pcil7XG4gIHJlcyA8LSBsb29rdXBbbG9va3VwJCdHZW5lIFN5bWJvbCcgJWluJVxuICAgICAgICAgICAgICAgICAgZW50cmV6X2hnbmNbZW50cmV6X2hnbmMkZW50cmV6Z2VuZSAlaW4lIHB3Z2VuZXMsICdoZ25jX3N5bWJvbCddICYgaGlnaF9jb25mLCAnTWljcm9STkEnXVxuICByZXR1cm4ocmVzKVxufVxudkdlbmVUb21pUk5BIDwtIFZlY3Rvcml6ZShHZW5lVG9taVJOQSlcbmBgYCJ9 -->
+<pre class="r"><code>GeneTomiRNA &lt;- function(pwgenes, high_conf, lookup = gene_to_mir){
+  res &lt;- lookup[lookup$'Gene Symbol' %in%
+                  entrez_hgnc[entrez_hgnc$entrezgene %in% pwgenes, 'hgnc_symbol'] &amp; high_conf, 'MicroRNA']
+  return(res)
+}
+vGeneTomiRNA &lt;- Vectorize(GeneTomiRNA)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaGlnaF9jb25mIDwtIGdlbmVfdG9fbWlyJGBOb3JtYWxpemVkIFNjb3JlYCA+PSA5MFxucHdfbWlSTkEgPC0gbGFwcGx5KGtlZ2cyLCBHZW5lVG9taVJOQSwgaGlnaF9jb25mID0gaGlnaF9jb25mKVxuYGBgIn0= -->
+<pre class="r"><code>high_conf &lt;- gene_to_mir$`Normalized Score` &gt;= 90
+pw_miRNA &lt;- lapply(kegg2, GeneTomiRNA, high_conf = high_conf)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>This doesn’t give the desired result…</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHcyX3RvX21pciA8LSBHZW5lVG9taVJOQShrZWdnMltbMl1dLCBoaWdoX2NvbmYgPSBoaWdoX2NvbmYpXG5gYGAifQ== -->
+<pre class="r"><code>pw2_to_mir &lt;- GeneTomiRNA(kegg2[[2]], high_conf = high_conf)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>First off all, we’re getting a very high number of miRNA’s. We should adjust the confidence for a certain interaction.</p>
+<p>Done. Now I’ve got a list of pathways with their respective miRNA’s.</p>
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiVGhpbmtpbmcgYWJvdXQgaG93IHRvIGNvbm5lY3QgbWlSTkEncyB0byBwYXRod2F5cyIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKMzAtMDMtMjAxNwoKbWlSTmEncyB0YXJnZXQgbVJOQSdzLiBUaGUgcHJlZGljdGVkIG1pUk5BLWdlbmUgaW50ZXJhY3Rpb25zIGFyZSBiaWFzZWQuIFJlYWQgIlBhdGh3YXkgYW5hbHlzaXMgZnJvbSBsaXN0cyBvZiBtaWNyb1JOQXM6IGNvbW1vbiBwaXRmYWxscyBhbmQgYWx0ZXJuYXRpdmUgc3RyYXRlZ3kiIGFuZCAiSW50ZWdyYXRlZCBnZW5lIHNldCBhbmFseXNpcyBmb3IgbWljcm9STkEgc3R1ZGllcyIKCmBgYHtyfQojIGJpb2NMaXRlKCJ0YXJnZXRzY2FuLkhzLmVnLmRiIikKbGlicmFyeSgidGFyZ2V0c2Nhbi5Icy5lZy5kYiIpCmBgYAoKMDMtMDQtMjAxNwoKR29kYXJkIGV0IGFsIHNob3cgdGhhdCBmaXJzdCBsb29raW5nIHVwIG1pUk5BIHRhcmdldCBnZW5lcyBhbmQgdGhlbiBkb2luZyBwYXRod2F5IGFuYWx5c2lzIGlzIGJpYXNlZCBhbmQgaXMgbm90IHRoZSBiZXN0IHdheS4gVGhleSBzdWdnZXN0IHRvIGNvbnZlcnQgdGhlIHBhdGh3YXkgZ2VuZSBsaXN0cyB0byBwYXRod2F5IG1pUk5BIGxpc3RzLCBhbmQgZG8gcGF0aHdheSBhbmFseXNpcyBkaXJlY3RseSBvbiB0aGUgbWlSTkEgZGF0YS4gVGhpcyBwcmV2ZW50cyBtaVJOQSdzIGJlaW5nICdjb3VudGVkIGRvdWJsZScgc2luY2UgZXZlcnkgbWlSTkEgd2lsbCBvbmx5IHNob3cgdXAgb25jZSBpbiBhIHBhdGh3YXkgbGlzdC4gQnV0LCBtYXliZSB0aGlzIGRvdWJsZSBjb3VudGluZyBpcyBhY3R1YWxseSBiaW9sb2dpY2FsbHkgcmVsZXZhbnQuIAoKTWF5YmUgaXQgd291bGQgYmUgYW4gaWRlYSB0byBpbmNvcnBvcmF0ZSBzb21ldGhpbmcgbGlrZSB0aGUgY29ycmVsYXRpb24gYmV0d2VlbiBhIG1pUk5BIGFuZCBpdHMgdGFyZ2V0IGdlbmUuIE9yIGlzIHRoZXJlIGEgbGluZWFyIHJlbGF0aW9uIGJldHdlZW4gYW1vdW50IG9mIG1pUk5BIHByZXNlbnQgYW5kIGFtb3VudCBvZiBtUk5BIHRhcmdldCBwcmVzZW50PwoKRm9yIG5vdywgdGhlIGlkZWEgaXM6CgotIEkndmUgZ290IGEgbGlzdCBvZiBwYXRod2F5cyB3aXRoIHRoZWlyIHJlc3BlY3RpdmUgZ2VuZXMKLSBJJ3ZlIGdvdCBhIGxpc3Qgb2YgbWlSTkEncyAodGhlIGZ1bGwgb3V0ZXIgam9pbiBvZiB0aGUgcm93bmFtZXMgb2YgYWxsIG1pUk5BIGRhdGFzZXRzKQotIEkgbmVlZCBhIGxvb2t1cCB0YWJsZSB0byBjb25uZWN0IG1pUk5BJ3MgYW5kIHRoZWlyIHRhcmdldCBnZW5lcyAvIG1STkEncw==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiVGhpbmtpbmcgYWJvdXQgaG93IHRvIGNvbm5lY3QgbWlSTkEncyB0byBwYXRod2F5cyIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKMzAtMDMtMjAxNwoKbWlSTmEncyB0YXJnZXQgbVJOQSdzLiBUaGUgcHJlZGljdGVkIG1pUk5BLWdlbmUgaW50ZXJhY3Rpb25zIGFyZSBiaWFzZWQuIFJlYWQgIlBhdGh3YXkgYW5hbHlzaXMgZnJvbSBsaXN0cyBvZiBtaWNyb1JOQXM6IGNvbW1vbiBwaXRmYWxscyBhbmQgYWx0ZXJuYXRpdmUgc3RyYXRlZ3kiIGFuZCAiSW50ZWdyYXRlZCBnZW5lIHNldCBhbmFseXNpcyBmb3IgbWljcm9STkEgc3R1ZGllcyIKCmBgYHtyfQojIGJpb2NMaXRlKCJ0YXJnZXRzY2FuLkhzLmVnLmRiIikKbGlicmFyeSgidGFyZ2V0c2Nhbi5Icy5lZy5kYiIpCmBgYAoKMDMtMDQtMjAxNwoKR29kYXJkIGV0IGFsIHNob3cgdGhhdCBmaXJzdCBsb29raW5nIHVwIG1pUk5BIHRhcmdldCBnZW5lcyBhbmQgdGhlbiBkb2luZyBwYXRod2F5IGFuYWx5c2lzIGlzIGJpYXNlZCBhbmQgaXMgbm90IHRoZSBiZXN0IHdheS4gVGhleSBzdWdnZXN0IHRvIGNvbnZlcnQgdGhlIHBhdGh3YXkgZ2VuZSBsaXN0cyB0byBwYXRod2F5IG1pUk5BIGxpc3RzLCBhbmQgZG8gcGF0aHdheSBhbmFseXNpcyBkaXJlY3RseSBvbiB0aGUgbWlSTkEgZGF0YS4gVGhpcyBwcmV2ZW50cyBtaVJOQSdzIGJlaW5nICdjb3VudGVkIGRvdWJsZScgc2luY2UgZXZlcnkgbWlSTkEgd2lsbCBvbmx5IHNob3cgdXAgb25jZSBpbiBhIHBhdGh3YXkgbGlzdC4gQnV0LCBtYXliZSB0aGlzIGRvdWJsZSBjb3VudGluZyBpcyBhY3R1YWxseSBiaW9sb2dpY2FsbHkgcmVsZXZhbnQuIAoKTWF5YmUgaXQgd291bGQgYmUgYW4gaWRlYSB0byBpbmNvcnBvcmF0ZSBzb21ldGhpbmcgbGlrZSB0aGUgY29ycmVsYXRpb24gYmV0d2VlbiBhIG1pUk5BIGFuZCBpdHMgdGFyZ2V0IGdlbmUuIE9yIGlzIHRoZXJlIGEgbGluZWFyIHJlbGF0aW9uIGJldHdlZW4gYW1vdW50IG9mIG1pUk5BIHByZXNlbnQgYW5kIGFtb3VudCBvZiBtUk5BIHRhcmdldCBwcmVzZW50PwoKRm9yIG5vdywgdGhlIGlkZWEgaXM6CgotIEkndmUgZ290IGEgbGlzdCBvZiBwYXRod2F5cyB3aXRoIHRoZWlyIHJlc3BlY3RpdmUgZ2VuZXMKLSBJJ3ZlIGdvdCBhIGxpc3Qgb2YgbWlSTkEncyAodGhlIGZ1bGwgb3V0ZXIgam9pbiBvZiB0aGUgcm93bmFtZXMgb2YgYWxsIG1pUk5BIGRhdGFzZXRzKQotIEkgbmVlZCBhIGxvb2t1cCB0YWJsZSB0byBjb25uZWN0IG1pUk5BJ3MgYW5kIHRoZWlyIHRhcmdldCBnZW5lcyAvIG1STkEncyAodGhlIHN1Z2dlc3RlZCBzb3VyY2UgbWlyRElQIHNlZW1zIGEgZ29vZCBjaG9pY2UsIGl0IGlzIGEgY29tYmluYXRpb24gb2Ygc2V2ZXJhbCBwcmVkaWN0aW9uIGRhdGFiYXNlcykKCkRvd25sb2FkZWQgYWxsIGRhdGEgZnJvbSBtaXJESVA6CgpgYGB7cn0KY29sbnMgPC0gc2NhbigiL2hvbWUvYml0L2JlcmcwL21pckRJUC9taXJESVAtQWxsLURhdGEtVmVyc2lvbjEuMC9SRUFETUUudHh0Iiwgd2hhdCA9IGNoYXJhY3RlcigpLCBzZXAgPSAiXG4iKVstMV0KZ2VuZV90b19taXIgPC0gcmVhZC50YWJsZSgiL2hvbWUvYml0L2JlcmcwL21pckRJUC9taXJESVAtQWxsLURhdGEtVmVyc2lvbjEuMC9taXJESVAtQWxsLURhdGEtVmVyc2lvbjEuMC50eHQiLCBzZXAgPSAiXHQiLCBxdW90ZSA9ICIiKQpjb2xuYW1lcyhnZW5lX3RvX21pcikgPC0gY29sbnMKYGBgCgpOb3cgSSd2ZSBhbHNvIGdvdCBhIGxvb2t1cCB0YWJsZS4gPUQKCk5leHQgdGhpbmcgdG8gZml4IGlzIGdldHRpbmcgYSBsaXN0IG9mIHBhdGh3YXlzIHdpdGggdGhlaXIgcmVzcGVjdGl2ZSBtaVJOQSdzIHRoYXQgYWZmZWN0IGl0LiBBcHByb2FjaDogdGFrZSBwYXRod2F5LWdlbmUgbGlzdCwgcGVyIHBhdGh3YXkgbG9vayB1cCB0YXJnZXR0aW5nIG1pUk5BJ3MgYW5kIHB1dCB0aGVtIGluIGEgbmV3IHBhdGh3YXktbWlSTkEgbGlzdC4KCmBgYHtyfQpHZW5lVG9taVJOQSA8LSBmdW5jdGlvbihwd2dlbmVzLCBoaWdoX2NvbmYsIGxvb2t1cCA9IGdlbmVfdG9fbWlyKXsKICByZXMgPC0gbG9va3VwW2xvb2t1cCQnR2VuZSBTeW1ib2wnICVpbiUKICAgICAgICAgICAgICAgICAgZW50cmV6X2hnbmNbZW50cmV6X2hnbmMkZW50cmV6Z2VuZSAlaW4lIHB3Z2VuZXMsICdoZ25jX3N5bWJvbCddICYgaGlnaF9jb25mLCAnTWljcm9STkEnXQogIHJldHVybihyZXMpCn0KdkdlbmVUb21pUk5BIDwtIFZlY3Rvcml6ZShHZW5lVG9taVJOQSkKYGBgCgoKYGBge3J9CmhpZ2hfY29uZiA8LSBnZW5lX3RvX21pciRgTm9ybWFsaXplZCBTY29yZWAgPj0gOTAKcHdfbWlSTkEgPC0gbGFwcGx5KGtlZ2cyLCBHZW5lVG9taVJOQSwgaGlnaF9jb25mID0gaGlnaF9jb25mKQpgYGAKClRoaXMgZG9lc24ndCBnaXZlIHRoZSBkZXNpcmVkIHJlc3VsdC4uLgoKYGBge3J9CnB3Ml90b19taXIgPC0gR2VuZVRvbWlSTkEoa2VnZzJbWzJdXSwgaGlnaF9jb25mID0gaGlnaF9jb25mKQpgYGAKCkZpcnN0IG9mZiBhbGwsIHdlJ3JlIGdldHRpbmcgYSB2ZXJ5IGhpZ2ggbnVtYmVyIG9mIG1pUk5BJ3MuIFdlIHNob3VsZCBhZGp1c3QgdGhlIGNvbmZpZGVuY2UgZm9yIGEgY2VydGFpbiBpbnRlcmFjdGlvbi4KCkRvbmUuIE5vdyBJJ3ZlIGdvdCBhIGxpc3Qgb2YgcGF0aHdheXMgd2l0aCB0aGVpciByZXNwZWN0aXZlIG1pUk5BJ3Mu</div>
 
 
 

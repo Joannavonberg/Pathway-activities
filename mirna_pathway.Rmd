@@ -22,4 +22,41 @@ For now, the idea is:
 
 - I've got a list of pathways with their respective genes
 - I've got a list of miRNA's (the full outer join of the rownames of all miRNA datasets)
-- I need a lookup table to connect miRNA's and their target genes / mRNA's
+- I need a lookup table to connect miRNA's and their target genes / mRNA's (the suggested source mirDIP seems a good choice, it is a combination of several prediction databases)
+
+Downloaded all data from mirDIP:
+
+```{r}
+colns <- scan("/home/bit/berg0/mirDIP/mirDIP-All-Data-Version1.0/README.txt", what = character(), sep = "\n")[-1]
+gene_to_mir <- read.table("/home/bit/berg0/mirDIP/mirDIP-All-Data-Version1.0/mirDIP-All-Data-Version1.0.txt", sep = "\t", quote = "")
+colnames(gene_to_mir) <- colns
+```
+
+Now I've also got a lookup table. =D
+
+Next thing to fix is getting a list of pathways with their respective miRNA's that affect it. Approach: take pathway-gene list, per pathway look up targetting miRNA's and put them in a new pathway-miRNA list.
+
+```{r}
+GeneTomiRNA <- function(pwgenes, high_conf, lookup = gene_to_mir){
+  res <- lookup[lookup$'Gene Symbol' %in%
+                  entrez_hgnc[entrez_hgnc$entrezgene %in% pwgenes, 'hgnc_symbol'] & high_conf, 'MicroRNA']
+  return(res)
+}
+vGeneTomiRNA <- Vectorize(GeneTomiRNA)
+```
+
+
+```{r}
+high_conf <- gene_to_mir$`Normalized Score` >= 90
+pw_miRNA <- lapply(kegg2, GeneTomiRNA, high_conf = high_conf)
+```
+
+This doesn't give the desired result...
+
+```{r}
+pw2_to_mir <- GeneTomiRNA(kegg2[[2]], high_conf = high_conf)
+```
+
+First off all, we're getting a very high number of miRNA's. We should adjust the confidence for a certain interaction.
+
+Done. Now I've got a list of pathways with their respective miRNA's.
