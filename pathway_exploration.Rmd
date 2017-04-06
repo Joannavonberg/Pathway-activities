@@ -1,3 +1,4 @@
+
 ---
 title: "R Notebook"
 output: html_notebook
@@ -31,7 +32,7 @@ select(org.Hs.eg.db, uniprots[1:4], "ENTREZID", "UNIPROT")
 ```{r}
 # biocLite("GenomicFeatures")
 library(GenomicFeatures)
-biocLite("mygene")
+# biocLite("mygene")
 library(mygene)
 ```
 ```{r}
@@ -137,7 +138,7 @@ save(GBM_mRNA_patients, file = "/home/abidata/Joanna/GBM/mRNA/GBM _mRNA_patients
 
 
 ```{r}
-for(d in diseases){
+for(d in names(diseases)){
   # objname <- sprintf("%s_mRNA_pathways", d)
   # print(objname)
   print(d)
@@ -145,6 +146,62 @@ for(d in diseases){
   # assign(objname, PathwaysMrna(1:229, d))
   colnames(obj) <- names(kegg2)
   assign(sprintf("%s_mRNA_pathways", d), obj)
+}
+```
+
+05-04-2017
+
+The function for average per pathway was adjusted to work on all omics types instead of only mRNA:
+
+```{r}
+for(d in names(diseases)){
+  print(d)
+  for(o in omics[5]){
+    print(o)
+    if(exists(sprintf("%s_%s", d, o))){
+      obj <- AveragePerPathway(1:229, d, o)
+      # colnames(obj) <- names(kegg2)
+      assign(sprintf("%s_%s_avg", d, o), t(obj))
+    }
+  }
+}
+```
+
+It is not a good idea to use the average operator for CNV data, since these can have negative and positive values. Read more about this, but it might be a good idea to use the fraction of changed genes in a pathway as pathway activity. Another approach might be to undo the -2 transformation to get to to the original data where 0 doesn't mean a copy number of 2 but an actual copy number of 0.
+
+Try this:
+
+```{r}
+for(d in names(diseases)){
+  objname <- sprintf("%s_CNV", d)
+  obj <- get(objname)
+  assign(objname, obj+2)
+}
+```
+
+Well, that was easy. But of course, transforming the data like this does not change the distribution. Now up- and down-regulation will still be canceled out. So back to the idea for fraction of changed or unchanged genes per pathway. If none of the genes in a certain pathway have a changed copy number, I want the ratio to be zero. So, if all the genes have a CNV of zero, I want the result to be zero. If 1/10th of the genes has a CNV of -0.5 and the rest is unchanged, I want the result to be 0.05. If 1/10th of the genes has a CNV of +0.5, I also want the result to be 0.05.
+
+```{r}
+# RUCN is Ratio of Unchanged Copy Number
+RUCN <- function(data, patients, mseq = FALSE){
+  genes <- entrez_hgnc[rownames(data), "entrezgene"]
+  res <- do.call(rbind, 
+                 lapply(
+                   kegg2,
+                   function(pw_genes){
+                     ind <- genes %in% pw_genes
+                     ind2 <- data[ind,]
+                     if(sum(ind) == 0){return(NULL)}
+                     
+                     pw_ratio <- 
+                     # pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
+                     names(pw_ratio) <- NULL
+                     return(pw_ratio)
+                   }
+                 )
+  )
+  colnames(res) <- rownames(patients)
+  return(res)
 }
 ```
 
