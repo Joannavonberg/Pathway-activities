@@ -1,0 +1,35 @@
+---
+title: "ssGSEA"
+output: html_notebook
+---
+
+```{r}
+# biocLite("GSVA")
+library(GSVA)
+```
+
+```{r}
+entrez_BRCA_mRNA <- BRCA_mRNA
+rownames(entrez_BRCA_mRNA) <- entrez_hgnc[rownames(BRCA_mRNA), "entrezgene"]
+gsva_test <- gsva(entrez_BRCA_mRNA, kegg2)
+BRCA_mRNA_pw_gsva <- gsva_test$es.obs
+```
+
+```{r}
+for(d in names(diseases)){
+  print(d)
+  for(o in omics[c(-2, -4)]){
+    objname <- sprintf("%s_%s", d, o)
+    print(objname)
+    if(exists(objname)){
+      obj <- get(objname)
+      obj2 <- obj
+      if(o == "miRNA"){pw <- pw_miRNA}
+      else{pw <- kegg2; rownames(obj2) <- HgncToEntrez(rownames(obj))}
+      res <- gsva(obj2, pw)$es.obs
+      assign(sprintf("%s_ssgsea", objname), res)
+    }
+  }
+}
+```
+
