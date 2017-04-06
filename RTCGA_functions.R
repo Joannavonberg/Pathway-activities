@@ -172,7 +172,7 @@ AveragePerPathway <- Vectorize(function(i, dis, om, fun = mean){
   # print(sprintf("i is: %i", i))
   obj <- get(sprintf("%s_%s", dis, om))
   if(om == "miRNA" | om == "miRNASeq"){
-    ind <- rownames(obj) %in% gene_to_m
+    ind <- rownames(obj) %in% pw_miRNA[[i]]
   }
   else{
     ind <- rownames(obj) %in% entrez_hgnc[entrez_hgnc$entrezgene %in% as.numeric(kegg2[[i]]), 'hgnc_symbol']
@@ -204,6 +204,40 @@ FirstPCPerPathway <- function(om, data, patients, lookup = entrez_hgnc, pwlist =
                      pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
                      names(pw2) <- NULL
                      return(pw2)
+                   }
+                 )
+  )
+  colnames(res) <- rownames(patients)
+  return(res)
+}
+
+HgncToEntrez <- function(hgnc){
+  return(entrez_hgnc[hgnc,'entrezgene'])
+}
+
+EntrezToHgnc <- function(entrez){
+  return(entrez_hgnc[entrez_hgnc$entrezgene %in% entrez, 'hgnc_symbol'])
+}
+
+RUCN <- function(data, patients){
+  genes <- HgncToEntrez(rownames(data))
+  res <- do.call(rbind, 
+                 lapply(
+                   kegg2,
+                   function(pw_genes){
+                     overlap_entrez <- genes[genes %in% pw_genes]
+                     if(length(overlap_entrez) == 0){return(NULL)}
+                     overlap_hgnc <- EntrezToHgnc(overlap_entrez)
+                     pw_data <- data[overlap_hgnc,]
+                     if(length(overlap_entrez) == 1){return(abs(pw_data)/length(pw_genes))}
+                     nr <- nrow(pw_data)
+                     pw_ratio <- apply(
+                       pw_data, 2, function(CNV_pw){
+                         return(mean(abs(CNV_pw)))
+                       }
+                     )
+                     names(pw_ratio) <- NULL
+                     return(pw_ratio)
                    }
                  )
   )
