@@ -5,7 +5,56 @@ output: html_notebook
 http://gdac.broadinstitute.org/runs/analyses__latest/reports/cancer/GBM/CopyNumber_Gistic2/nozzle.html
 The genes x samples matrix was downloaded from here.
 ```{r}
-CNV_GBM <- read.table("../Downloads/gdac.broadinstitute.org_GBM-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt", header = TRUE)
+for(d in diseases[4]){
+  assign(
+    sprintf("%s_CNV", d),
+    read.table(sprintf("/home/bit/berg0/Downloads/gdac.broadinstitute.org_%s-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt", d), header = TRUE, sep = "\t")     
+    )
+}
+# GBM_CNV <- read.table("/home/bit/berg0/Downloads/gdac.broadinstitute.org_GBM-TP.CopyNumber_Gistic2.Level_4.2016012800.0.0/all_data_by_genes.txt", header = TRUE)
+```
+
+```{r}
+
+# # streepjes <- paste0(strsplit(BRCA_CNV_patients$patient_id, split = "[.]"), collapse = "_")
+# vpaste0 <- Vectorize(paste0)
+# l <- strsplit(colnames(BRCA_CNV)[c(-1, -2, -3)], split = "[.]")
+# streepjes <- lapply(l, vpaste0, collapse = "_")
+colnames(OV_CNV)[c(-1, -2, -3)] <- unlist(lapply(strsplit(colnames(OV_CNV)[c(-1, -2, -3)], split = "[_]"), vpaste0, collapse = "-"))
+
+colnames(GBM_CNV)[c(-1, -2, -3)] <- unlist(lapply(strsplit(colnames(GBM_CNV)[c(-1, -2, -3)], split = "[_]"), vpaste0, collapse = "-"))
+
+it <- c("CNV", "methylation", "miRNASeq")
+i <- 0
+for(d in names(diseases)){
+  for(pat in list(
+    colnames(get(sprintf("%s_CNV", d)))[c(-1, -2, -3)],
+    rownames(get(sprintf("%s_methylation", d))),
+    rownames(get(sprintf("%s_miRNASeq", d)))
+  ))
+  {
+    name <- sprintf("%s_%s_patients", d, it[i+1])
+    # print(name)
+    assign(name, GetPatientsVec(pat, TRUE, paste(name, ".txt", sep = "")))
+    i <- (i + 1)%%3
+    # assign(sprintf("%s_patients", strsplit(deparse(substitute(pat)), c("(", ")"))[2]))
+  }
+}
+
+# BRCA_inter <- FindIntersection(omics, "BRCA")
+# GBM_inter <- FindIntersection(omics, "GBM")
+# OV_inter <- FindIntersection(omics, "OV")
+
+for(d in "OV"){
+  assign(sprintf("%s_inter", d), FindIntersection(c("CNV", "mRNA"), d, TRUE))
+}
+```
+
+```{r}
+# library("VennDiagram", lib.loc = "../R/x86_64-pc-linux-gnu-library/3.3")
+clin_venn <- venn.diagram(list(cnv = GBM_CNV_patients$patient_id, mrna = GBM_mRNA_patients$patient_id), filename = NULL)
+grid.newpage(recording = FALSE)
+grid.draw(clin_venn, recording = FALSE)
 ```
 
 ```{r}
@@ -16,7 +65,60 @@ for(d in names(diseases)){
 
 ```{r}
 for(d in names(diseases)){
-    save(list = sprintf("%s_CNV", d), file = sprintf("/home/abidata/Joanna/%s/CVN/%s_CNV.txt", d, d))
+    save(list = sprintf("%s_CNV", d), file = sprintf("/home/abidata/Joanna/%s/CNV/%s_CNV.rda", d, d))
+}
+
+omics <-
+
+for(d in names(diseases)){
+  print(d)
+  save(list = sprintf("%s_pheno", d), 
+       file = sprintf("/home/abidata/Joanna/%s/%s_pheno.rda", d, d))
+  for(o in omics){
+    print(o)
+    save(list = sprintf("%s_%s", d, o), 
+         file = sprintf("/home/abidata/Joanna/%s/%s/%s_%s.rda", d, o, d, o))
+    save(list = sprintf("%s_%s_patients", d, o),
+         file = sprintf("/home/abidata/Joanna/%s/%s/%s_%s_patients.rda", d, o, d, o))
   }
+}
+
+```
+
+28-03-2017
+
+Rewrote this function to only use existing data instead of downloading from RTCGA:
+```{r}
+AddSurvDataToExistingOmics <- function(diseases, omics, save = FALSE){
+  for(dis in names(diseases)){
+    res <- GetPheno(dis, save, diseases[dis])
+    assign(sprintf("%s_pheno", dis), 
+           res[[1]],
+           envir = .GlobalEnv)
+    for(om in omics){
+      dis_om <- sprintf("%s_%s", dis, om)
+      # assign(dis_om, 
+             # GetOmicMat(dis, om, save, diseases[dis]), 
+             # envir = .GlobalEnv)
+      if(exists(dis_om)){
+        assign(sprintf("%s_patients", dis_om), 
+               GetPatientsVec(colnames(get(dis_om)), save, sprintf("%s_patients.txt", dis_om)), 
+               envir = .GlobalEnv)
+        if(nrow(get(sprintf("%s_patients", dis_om))) == 0){
+          assign(sprintf("%s_patients", dis_om), 
+                 NULL,
+                 envir = .GlobalEnv)
+        }
+      }
+    }
+  }
+}
+```
+
+```{r}
+# diseases <- as.logical(c(1, 0, 1, 1))
+# names(diseases) <- tmp
+# omics <- c("mRNA", "mRNAseq", "miRNA", "miRNAseq", "CNV", "methylation")
+AddSurvDataToExistingOmics(diseases, omics, save = TRUE)
 ```
 
