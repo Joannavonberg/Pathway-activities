@@ -183,18 +183,18 @@ Well, that was easy. But of course, transforming the data like this does not cha
 
 ```{r}
 # RUCN is Ratio of Unchanged Copy Number
-RUCN <- function(data, patients, mseq = FALSE){
+RUCN <- function(data, patients){
   genes <- entrez_hgnc[rownames(data), "entrezgene"]
   res <- do.call(rbind, 
                  lapply(
                    kegg2,
                    function(pw_genes){
-                     ind <- genes %in% pw_genes
-                     ind2 <- data[ind,]
-                     if(sum(ind) == 0){return(NULL)}
-                     
-                     pw_ratio <- 
-                     # pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
+                     overlap_entrez <- genes[genes %in% pw_genes]
+                     if(length(overlap_entrez) == 0){return(NULL)}
+                     overlap_hgnc <- entrez_hgnc[entrez_hgnc$entrezgene == overlap_entrez, 'hgnc_symbol']
+                     pw_data <- data[overlap_hgnc,]
+                     if(length(overlap_entrez) == 1){return(abs(pw_data)/length(pw_genes))}
+                     # do things here
                      names(pw_ratio) <- NULL
                      return(pw_ratio)
                    }
@@ -205,3 +205,65 @@ RUCN <- function(data, patients, mseq = FALSE){
 }
 ```
 
+Now I've got the situation for an overlap of 0, and an overlap of 1. For all the other situations, I need to think how to do this.
+
+```{r}
+test_data <- BRCA_CNV[c(1, 400, 900, 1200),1:10]
+test_data
+```
+
+```{r}
+nr <- nrow(test_data)
+res <- apply(test_data, 2, function(pw_genes){return(sum(abs(pw_genes))/nr)})
+res
+```
+```{r}
+# RUCN is Ratio of Unchanged Copy Number
+RUCN <- function(data, patients){
+  genes <- HgncToEntrez(rownames(data))
+  res <- do.call(rbind, 
+                 lapply(
+                   kegg2,
+                   function(pw_genes){
+                     overlap_entrez <- genes[genes %in% pw_genes]
+                     if(length(overlap_entrez) == 0){return(NULL)}
+                     overlap_hgnc <- EntrezToHgnc(overlap_entrez)
+                     pw_data <- data[overlap_hgnc,]
+                     if(length(overlap_entrez) == 1){return(abs(pw_data)/length(pw_genes))}
+                     nr <- nrow(pw_data)
+                     pw_ratio <- apply(
+                       pw_data, 2, function(CNV_pw){
+                         return(sum(abs(CNV_pw))/nr)
+                       }
+                     )
+                     names(pw_ratio) <- NULL
+                     return(pw_ratio)
+                   }
+                 )
+  )
+  colnames(res) <- rownames(patients)
+  return(res)
+}
+```
+Now try it out:
+```{r}
+test_RUCN <- RUCN(BRCA_CNV, BRCA_CNV_patients)
+```
+I'm getting NA's for some pathways. Let's check them:
+```{r}
+test_data <- BRCA_CNV[,1:2]
+test_data
+```
+```{r}
+nr <- nrow(test_data)
+res <- apply(test_data[EntrezToHgnc(kegg2[[2]]),], 2, function(pw_genes){return(sum(abs(pw_genes))/nr)})
+res
+```
+It's fixed now, this function works and is put in RTCGA_functions.R.
+```{r}
+for(d in names(diseases)){
+  obj <- get(sprintf("%s_CNV", d))
+  pat <- get(sprintf("%s_CNV_patients", d))
+  assign(sprintf("%s_CNV_pwratio", d), RUCN(obj, pat))
+}
+```
