@@ -48,9 +48,61 @@ res <- apply(
   function(x){
     return(
       mean(x[ordered[(0.5*length(ordered):length(ordered))]])
-      )
-    }
-  )
+    )
+  }
+)
 plot(res, cex = 0.1, col = ifelse(as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300, "red", "green"))
+```
+13-03-2017
+
+A lot of times with survival data, instead of what I did, a univariate survival model is used. Read about Cox proportional hazard model. R-function is called coxPH(), package needed is 'survival'.
+```{r}
+# biocLite("survival")
+library("survival")
+surv_obj <- Surv(time = as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]), event = !as.logical(BRCA_pheno$censored[BRCA_mRNA_patients$patient_id]), type = "right")
+
+# for 1 gene:
+Y <- BRCA_mRNA
+test_cox <- coxph(surv_obj ~ Y[1,], data = as.data.frame(Y))
+pval <- unlist(summary(test_cox))$logtest.pvalue
+
+pvals_BRCA_mRNA <- apply(
+  BRCA_mRNA, 
+  1, 
+  function(row){
+    return(
+      unlist(summary(coxph(surv_obj ~ row)))$logtest.pvalue
+    )
+  }
+)
+
+pval_order <- order(pvals_BRCA_mRNA, decreasing = TRUE)
+high_cor_genes <- pval_order[1:ceiling(length(pval_order)/2)]
+
+BRCA_mRNA_highcor <- apply(
+  BRCA_mRNA, 
+  2, 
+  function(col){
+    return(
+      mean(col[high_cor_genes])
+    )
+  }
+)
+
+# original code by Ashar:
+# pvalue.sig<- c(0)
+# 
+# for ( i in 1:ncol(Y)){
+#   q1 <- unlist(summary(coxph(surv.obj ~ Y[,i], data = as.data.frame(Y))))
+#   pvalue.sig[i] <- q1$logtest.pvalue 
+#   
+# }
+plot(BRCA_mRNA_highcor, cex = 0.1, col = ifelse(as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300, "red", "green"))
+```
+
+```{r}
+low_surv <- BRCA_mRNA_highcor[as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) < 300]
+high_surv <- BRCA_mRNA_highcor[as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$patient_id]) >= 300]
+boxplot(low_surv, high_surv, names = c("survival less than 300 days", "survival 300 days or more"))
 ```
 
