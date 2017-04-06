@@ -83,4 +83,62 @@ for(d in names(diseases)){
   }
 }
 ```
+```{r}
+for(d in names(diseases)){
+  objname <- sprintf("%s_pheno", d)
+  obj <- get(objname)
+  rownames(obj) <- toupper(rownames(obj))
+  assign(objname, obj)
+}
+
+vpaste0 <- Vectorize(paste0)
+rownames(BRCA_pheno) <- unlist(lapply(strsplit(rownames(BRCA_pheno), split = "[-]"), vpaste0, collapse = "."))
+
+for(d in names(diseases)[-1]){
+  objname <- sprintf("%s_pheno", d)
+  obj <- get(objname)
+  rownames(obj) <- unlist(lapply(strsplit(rownames(obj), split = "[-]"), vpaste0, collapse = "."))
+  assign(objname, obj)
+}
+```
+
+```{r}
+# library("sva")
+for(d in names(diseases)){
+  print(d)
+  assign(sprintf("%s_mRNA_corrected", d), CorrectBatch(
+    get(sprintf("%s_mRNA", d)),
+    get(sprintf("%s_mRNA_patients", d)),
+    get(sprintf("%s_pheno", d))
+  ))
+}
+```
+```{r}
+for(d in names(diseases)){
+  if(exists(sprintf("%s_mRNA_corrected", d))){
+    assign(sprintf("%s_mRNA", d), get(sprintf("%s_mRNA_corrected", d)))
+  }
+}
+```
+
+And now save everything:
+
+```{r}
+for(d in names(diseases)){
+  print(d)
+  if(exists(sprintf("%s_pheno", d))){
+    save(list = sprintf("%s_pheno", d), 
+         file = sprintf("/home/abidata/Joanna/%s/%s_pheno.rda", d, d))
+  }
+  for(o in omics){
+    print(o)
+    if(exists(sprintf("%s_%s", d, o))){
+      save(list = sprintf("%s_%s", d, o), 
+           file = sprintf("/home/abidata/Joanna/%s/%s/%s_%s.rda", d, o, d, o))
+      save(list = sprintf("%s_%s_patients", d, o),
+           file = sprintf("/home/abidata/Joanna/%s/%s/%s_%s_patients.rda", d, o, d, o))
+    }
+  }
+}
+```
 
