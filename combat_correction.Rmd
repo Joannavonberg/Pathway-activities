@@ -189,17 +189,29 @@ sum(is.na(OV_mRNA))
 
 Ashar mentioned there is a package to impute missing data, specifically for micro array data: impute.
 ```{r}
-biocLite("impute")
+# biocLite("impute")
 library(impute)
 ```
 ```{r}
-for(d in diseases){
-  assign(
-    sprintf("%s_mRNA_imputed", d),
-    impute.knn(get(sprintf("%s_mRNA", d))),
-    envir = .GlobalEnv
-  )
+for(d in names(diseases)){
+  for(o in omics){
+    if(exists(sprintf("%s_%s", d, o))){
+      obj <- get(sprintf("%s_%s", d, o))
+      print(d)
+      print(o)
+      assign(
+        sprintf("%s_%s_imputed", d, o),
+        impute.knn(obj),
+        envir = .GlobalEnv
+      )
+    }
+  }
 }
+
+# BRCA_mRNA <- BRCA_mRNA_imputed
+# GBM_mRNA <- GBM_mRNA_imputed
+# OV_mRNA <- OV_mRNA_imputed
+
 ```
 
 ```{r}
@@ -309,7 +321,8 @@ AddSurvDataToOmics(diseases, omics, save = TRUE)
 for(dis in names(diseases)){
   assign(sprintf("%s_inter", dis), FindIntersection(omics, dis, save = TRUE))
 }
-
+```
+```{r}
 # biocLite("impute")
 library(impute)
 
