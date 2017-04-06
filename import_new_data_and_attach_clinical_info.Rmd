@@ -107,6 +107,6 @@ library("RTCGA.methylation.20160128", lib = "../R/x86_64-pc-linux-gnu-library/3.
 # Then process the methylation data:
 AddSurvDataToOmics(diseases, omics, save = TRUE)
 for(dis in diseases){
-  assign(sprintf("%s_inter", dis), FindIntersection(c(omics, "methylation"), dis, save = FALSE))
+  assign(sprintf("%s_inter", dis), FindIntersection(c(omics), dis, save = FALSE))
 }
 ```
