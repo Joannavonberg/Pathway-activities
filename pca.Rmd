@@ -141,3 +141,33 @@ for(d in names(diseases)){
 ```
 
 Now I need to look up gene targets for miRNA's.
+
+04-04-2017
+
+Seeing if this method now also works for miRNA:
+
+```{r}
+test_GBM_miRNA <- FirstPCPerPathway(om = "miRNA", data = GBM_miRNA, patients = GBM_miRNA_patients, pwlist = pw_miRNA)
+```
+
+Okay, it works. It does look like for some pathways there are no data.
+
+```{r}
+
+for(d in names(diseases)){
+  print(d)
+  for(o in c("miRNA"
+             )){
+    print(o)
+    dis_om <- sprintf("%s_%s", d, o)
+    if(exists(dis_om)){
+      assign(sprintf("%s_%s_pc1", d, o), 
+             FirstPCPerPathway(om = o, data = get(dis_om), patients = get(sprintf("%s_patients", dis_om)), pwlist = pw_miRNA)
+      )
+    }
+    else{print("doesn't exist")}
+  }
+}
+```
+
+Next step: check also the "average per pathway"-function to see if it will work with miRNA data. And convert the miRNASeq data so that only the reads_per_million are kept.
