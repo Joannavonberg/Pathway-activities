@@ -34,4 +34,4 @@ Here, the ratio bad/good would be 24/54 = 0.444 which is better than both other 
 
 24-02-2017
 
-During the group meeting, the imbalance in class labels was discussed and professor Froehlich said that the class imbalance would not be a problem, unless it is an extr
+During the group meeting, the imbalance in class labels was discussed and professor Froehlich said that the class imbalance would not be a problem, unless it is an extreme inbalance.
