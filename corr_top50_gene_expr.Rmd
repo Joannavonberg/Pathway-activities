@@ -106,3 +106,99 @@ high_surv <- BRCA_mRNA_highcor[as.numeric(BRCA_pheno$days[BRCA_mRNA_patients$pat
 boxplot(low_surv, high_surv, names = c("survival less than 300 days", "survival 300 days or more"))
 ```
 
+10-04-2017
+
+Idea: keep the pval vector from code above. When going over the pathways, take the average (edit average function for this) from just the highest scoring genes in that pathway. So take all the pathway genes, look up their p-values and take the average from just the top half.
+
+11-04-2017
+
+```{r}
+surv_obj <- Surv(time = as.numeric(BRCA_pheno[BRCA_mRNA_patients$patient_id, 'days']), event = !as.logical(BRCA_pheno[BRCA_mRNA_patients$patient_id, 'censored']), type = "right")
+
+pvals_BRCA_mRNA <- apply(
+  BRCA_mRNA, 
+  1, 
+  function(row){
+    return(
+      unlist(summary(coxph(surv_obj ~ row)))$logtest.pvalue
+    )
+  }
+)
+
+test_top50 <- AveragePerPathway(1:229, "BRCA", "mRNA", top50 = TRUE, pval = pvals_BRCA_mRNA)
+colnames(test_top50) <- names(kegg2)
+```
+
+There's something wrong with the patient names. In some data sets, they are separated by dashes and in others by dots. I did fix this, but then the server crashed and apparently I didn't correct it again. I want to correct everything to dots.
+
+The problematic (i.e. having dashes) data sets are:
+miRNAseq and mRNA for every disease
+
+```{r}
+# test <- unlist(lapply(strsplit(colnames(BRCA_mRNA), split = "[-]"), vpaste0, collapse = "."))
+for(d in names(diseases)){
+  for(o in c("miRNAseq", "mRNA")){
+    objname <- sprintf("%s_%s", d, o)
+    if(exists(objname)){
+      obj <- get(objname)
+      colnames(obj) <- unlist(lapply(strsplit(colnames(obj), split = "[-]"), vpaste0, collapse = "."))
+      assign(objname, obj)
+    }
+  }
+}
+```
+
+```{r}
+for(d in names(diseases)){
+  for(o in c("miRNAseq", "mRNA")){
+    objname <- sprintf("%s_%s", d, o)
+    if(exists(objname)){
+      obj <- get(objname)
+      assign(sprintf("%s_patients", objname), 
+             GetPatientsVec(colnames(obj), save = FALSE)
+      )
+    }
+  }
+}
+```
+
+It seems to work for BRCA_mRNA, let's see it for the other omics data types:
+
+```{r}
+for(d in names(diseases)){
+  print(d)
+  pheno <- get(sprintf("%s_pheno", d))
+  for(o in omics){
+    print(o)
+    objname <- sprintf("%s_%s", d, o)
+    if(exists(objname)){
+      obj <- get(objname)
+      patients <- get(sprintf("%s_patients", objname))
+      surv_obj <- Surv(time = as.numeric(pheno[patients$patient_id, 'days']), event = !as.logical(pheno[patients$patient_id, 'censored']), type = "right")
+      
+      pval <- apply(
+        obj, 
+        1, 
+        function(row){
+          return(
+            unlist(summary(coxph(surv_obj ~ row)))$logtest.pvalue
+          )
+        }
+      )
+      
+      res <- AveragePerPathway(1:229, d, o, top50 = TRUE, pval = pval)
+      colnames(res) <- names(kegg2)
+      assign(sprintf("%s_top50pw", objname), res)
+    }
+  }
+}
+```
+19-04-2017
+```{r}
+hist((BRCA_mRNA_avg - t(BRCA_mRNA_top50pw)), breaks = c(seq(from = -2.55, to = 2.55, by = 0.1)))
+```
+
+We can see, that in most cases there is minimal difference between taking the overall average and only the average of the top 50 most correlating genes. Where there is a difference, the difference is more often negative (meaning the top 50 values were higher) than positive.
+For both overall average and top 50 average also try out the following summarization methods:
+- variance
+- direction aware average (see FERAL)
