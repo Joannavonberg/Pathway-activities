@@ -154,14 +154,20 @@ for(d in names(diseases)){
 The function for average per pathway was adjusted to work on all omics types instead of only mRNA:
 
 ```{r}
-for(d in names(diseases)){
+# BRCA_CNV <- BRCA_CNV[,c(-1,-2)]
+# BRCA_CNV <- cbind(BRCA_CNV)
+# BRCA_CNV <- matrix(unlist(BRCA_CNV), nrow = nrow(BRCA_CNV), dimnames = list(rownames(BRCA_CNV), colnames(BRCA_CNV)))
+for(d in names(diseases)[1]){
   print(d)
-  for(o in omics[5]){
+  for(o in omics[3]){
     print(o)
     if(exists(sprintf("%s_%s", d, o))){
+      # if(o == "CNV"){
+      #   obj <- RUCN(get(sprintf("%s_CNV", d)), get(sprintf("%s_CNV_patients", d)))
+      # }
       obj <- AveragePerPathway(1:229, d, o)
       # colnames(obj) <- names(kegg2)
-      assign(sprintf("%s_%s_avg", d, o), t(obj))
+      assign(sprintf("%s_%s_avg", d, o), obj)
     }
   }
 }
@@ -204,6 +210,7 @@ RUCN <- function(data, patients){
   return(res)
 }
 ```
+06-04-2017
 
 Now I've got the situation for an overlap of 0, and an overlap of 1. For all the other situations, I need to think how to do this.
 
@@ -267,3 +274,9 @@ for(d in names(diseases)){
   assign(sprintf("%s_CNV_pwratio", d), RUCN(obj, pat))
 }
 ```
+
+I realized I can very easily rewrite the average function to use absolute values, so it will also work for CNV data. Now I also need to look at the first pc calculation for CNV. That's done, only needed to change the values into absolute values.
+
+NB: PCA and overall mean per pathway are unsupervised techniques to get a pathway activity. Average of 50% genes that are most significantly associated with the clinical outcome is a supervised technique, so the determination of the p-values (in the case of the Cox proportional hazards model) should only be done on a training set. Idea: determine one list of p-values per datatype and disease combination, then when working on pathway level one can take a look at that list. Should the same patients be used as training set for all omics data types? I would say yes.
+
+So before applying this method, I need to choose a training set of patients per disease. These training patients should be a subset of the intersection of patients that occur in every omics data type. Might be good to make sure the class balance in the training set is the same as the balance in the overall dataset (or rather, the overall intersection of patients).
