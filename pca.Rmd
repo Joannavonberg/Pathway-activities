@@ -78,14 +78,38 @@ BRCA_mRNA_pc1 <- FirstPCPerPathway(BRCA_mRNA_corrected, BRCA_mRNA_patients)
 ```
 
 ```{r}
-for(d in names(diseases)[-1]){
+# rownames(BRCA_CNV) <- BRCA_CNV[,1]
+# BRCA_CNV <- BRCA_CNV[,c(-1,-2,-3)]
+# BRCA_CNV_patients <- BRCA_CNV_patients[c(-1,-2,-3),]
+ind <- seq(2, (nrow(BRCA_miRNASeq)-1), by = 3)
+test <- BRCA_miRNASeq[ind,]
+BRCA_miRNASeq <- test[,-1]
+```
+
+```{r}
+# str(pw_miRNA)
+# BRCA_miRNASeq <- t(BRCA_miRNASeq)
+for(d in "BRCA"){
   print(d)
-  for(o in omics[c(-2, -3, -4)]){
+  for(o in omics[6]){
     print(o)
     dis_om <- sprintf("%s_%s", d, o)
     if(exists(dis_om)){
       assign(sprintf("%s_%s_pc1", d, o), 
-             FirstPCPerPathway(data = get(dis_om), patients = get(sprintf("%s_patients", dis_om)))
+             FirstPCPerPathway(
+               om = o, 
+               data = get(dis_om), 
+               patients = get(sprintf("%s_patients", dis_om)), 
+               pwlist = ifelse(
+                 (o == "miRNA" | o == "miRNASeq"), 
+                 list(pw_miRNA), 
+                 list(kegg2)), 
+               mseq = ifelse(
+                 (o == "miRNASeq" | o == "mRNASeq"),
+                 TRUE,
+                 FALSE
+               )
+             )
       )
     }
   }
@@ -171,3 +195,9 @@ for(d in names(diseases)){
 ```
 
 Next step: check also the "average per pathway"-function to see if it will work with miRNA data. And convert the miRNASeq data so that only the reads_per_million are kept.
+
+03-05-2017
+
+It looks like the data is not as processed as it should be, as if the workspace has been reverted to an older state (CNV has the extra columns again, which makes me think maybe the other processing steps also have been reverted...).
+
+Today the server will be restarted, so just to be sure I will leave this for after the restart.
