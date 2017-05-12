@@ -1,0 +1,780 @@
+---
+title: "Rapid development for average operator"
+output: html_notebook
+---
+
+19-04-2017
+After discussing the progress of the project with Jeroen in Utrecht, we decided it would be a good idea to walk through the whole process once using only the average operator (since this is the most simple operator and all omics data types have already been pre-processed for it).
+
+```{r}
+# install.packages("SGL")
+library("SGL")
+```
+
+```{r}
+pheno <- BRCA_pheno[BRCA_mRNA_patients$patient_id,]
+pheno$censored <- as.numeric(as.logical(pheno$censored))
+test <- cvSGL(data = list(x = t(BRCA_mRNA_avg)[1:200,], time = pheno$days[1:200], status = pheno$censored[1:200]), type = "cox", nfold = 2)
+```
+
+GLMnet package is more recent than SGL package.
+
+```{r}
+# biocLite("glmnet")
+library("glmnet")
+```
+
+```{r}
+### Using penalized Cox regression model
+
+data <- t(BRCA_mRNA_avg)
+training <- 1:180
+testing <- 181:200
+smod <- Surv(pheno$days[training], pheno$censored[training])
+## Using Cross-validation to build the model
+cox.model <- cv.glmnet(x = data[training,], y = smod, family = "cox")
+
+## To predict    using a particular value of lambda
+cox.predict <- predict(object = cox.model, newx = Y.test, s= "lambda.min")
+```
+```{r}
+ind <- pheno$days == 0
+sum(ind)
+pheno$censored[ind]
+```
+There are some patients that are censored from the beginning. It is probably better to remove these (for all diseases).
+```{r}
+data <- t(BRCA_mRNA_avg)
+pheno <- BRCA_pheno[BRCA_mRNA_patients$patient_id,]
+pheno <- pheno[pheno$days > 0,]
+training <- 1:500
+testing <- 501:565
+smod <- Surv(pheno$days[training], as.logical(pheno$censored[training]))
+
+## Using Cross-validation to build the model
+cox.model <- cv.glmnet(x = data[training,], y = smod, family = "cox")
+
+## To predict using a particular value of lambda
+cox.predict <- predict.cv.glmnet(object = cox.model, newx = data[testing,], s= "lambda.min")
+```
+
+The predict function returns risk scores: the lower the risk score, the higher the survival of that patient would be. To compare the predicted risk scores with the actual survival data, a c-index will be calculated:
+
+```{r}
+smod.test <- Surv(pheno$days[testing], as.logical(pheno$censored[testing]))
+
+CIndex.test <- as.numeric(survConcordance(smod.test ~ cox.predict)[1])
+```
+
+Quick test to see what would happen if ssGSEA was used:
+
+```{r}
+GetCIndex <- function(data, pheno_input, maxit){
+  pheno <- pheno_input[pheno_input$days > 0,]
+  print(nrow(pheno))
+  mid <- ceiling(0.9*nrow(pheno))
+  print(mid)
+  # training <- 1:509
+  # testing <- 510:565
+  training <- 1:mid
+  testing <- (mid+1):nrow(pheno)
+  smod <- Surv(pheno$days[training], as.numeric(!as.logical(pheno$censored[training])), type = "right")
+  print("cox.model is going to start")
+  cox.model <- cv.glmnet(x = data[training,], y = smod, family = "cox", type.measure = "deviance", parallel = TRUE, maxit = maxit)
+  print("cox.predict is going to start")
+  cox.predict <- predict.cv.glmnet(object = cox.model, newx = data[testing,])#, s= "lambda.min")
+  print("smod.test is going to start")
+  smod.test <- Surv(pheno$days[testing], as.numeric(!as.logical(pheno$censored[testing])), type = "right")
+  CIndex.test <- as.numeric(survConcordance(smod.test ~ cox.predict)[1])
+  return(CIndex.test)
+}
+```
+```{r}
+pheno <- BRCA_pheno[BRCA_mRNA_patients$patient_id,] 
+C_avg <- GetCIndex(t(BRCA_mRNA_avg), pheno, maxit = 100000)
+C_ssGSEA <- GetCIndex(t(BRCA_mRNA_ssgsea), pheno)
+C_top50 <- GetCIndex(BRCA_mRNA_top50pw, pheno)
+```
+
+All C-indices are around 0.5. Read more about C-index.
+
+20-04-2017
+
+A C-index of 0.5 is just as 'good' as randomly choosing an outcome. I just realized I gave the Surv() function the boolean 'censored'. I should have given it 'event', so the logical complement of 'censored'. Run the code again:
+
+```{r}
+pheno <- BRCA_pheno[BRCA_mRNA_patients$patient_id,] 
+C_avg <- GetCIndex(t(BRCA_mRNA_avg), pheno)
+C_ssGSEA <- GetCIndex(t(BRCA_mRNA_ssgsea), pheno)
+C_top50 <- GetCIndex(BRCA_mRNA_top50pw, pheno)
+print(C_avg, C_ssGSEA, C_top50)
+```
+
+There is an error, and all the outputs are NaN. The glmnet functions want a numeric vector for the event variable, with 1 meaning this patient has had an event (e.g. they have died) and 0 meaning this patient was (right) censored. Therefore, instead of relying on implicit/internal parsing of the booleans to numerics I will first parse to numeric and then feed the vector to the functions.
+
+Tried it, but I'm still having the same problem. Something is going wrong with the cv.glmnet() function.
+
+In any case, I will use the parallel option in this function. First load a parallel package.
+```{r}
+library(doMC)
+```
+I'm trying it again with more iterations (maxit = 10000). Nope, still doesn't work.
+
+I will try the SGL package again.
+
+```{r}
+pheno$censored <- as.numeric(as.logical(pheno$censored))
+test <- cvSGL(data = list(x = t(BRCA_mRNA_avg)[1:200,], time = pheno$days[1:200], status = pheno$censored[1:200]), type = "cox", nfold = 2)
+pred <- predict(test, newx = t(BRCA_mRNA_avg)[201:400,])
+```
+24-04-2017
+
+Can a group lasso be used for two different types of groups (omics type and pathway)? So that one gene is in exactly two different groups? That's not necessary in this case, since the pathways are already 'condensed'.
+Idea: We can put more prior knowledge into the model by condensing first on pathways, and then on 'similar pathways' (maybe using GO terms). Research gene ontologies to see if this would make sense, since GO terms are used to describe a gene and not a pathway. This is not a very good idea probably.
+But, in KEGG, there are some relations between pathways. Maybe I could put all the pathways in one group that are connected?
+
+```{r}
+
+```
+
+```{r}
+
+```
+25-14-2017
+ 
+But this is a different idea, and should be in a different file.
+
+26-04-2017
+
+Done a lot of literature study this week. Tomorrow I will do:
+
+- use all the omics data together in one big matrix (as a first try)
+- use regularized Cox regression to learn a model
+- use that model to predict
+
+27-04-2017
+```{r}
+rownames(BRCA_mRNA_avg) <- unlist(lapply(strsplit(rownames(BRCA_mRNA_avg), split = "[-]"), vpaste0, collapse = "."))
+for(o in c("CNV", "methylation", "mRNA")){
+  print(o)
+  objname <- sprintf("BRCA_%s_avg", o)
+  obj <- get(objname)
+  obj <- t(obj)
+  colnames(obj) <- names(kegg2)
+  assign(objname, obj)
+}
+```
+
+Making one matrix with all the omics together:
+
+```{r}
+d <- "BRCA"
+for(o in omics[c(6)]){
+  objname <- sprintf("%s_%s_avg", d, o)
+  if(exists(objname)){
+    obj <- get(objname)
+    colnames(obj) <- paste(colnames(obj), o, sep = "_")
+    assign(objname, obj)
+  }
+}
+```
+
+```{r}
+overlap <- FindIntersection(omics[c(-2, -3, -4)], "BRCA")
+list <- mget(paste("BRCA", omics[c(-2, -3, -4)], "avg", sep = "_"))
+list_pat <- mget(paste("BRCA", omics[c(-2, -3, -4)], "patients", sep = "_"))
+for(i in 1:length(list)){
+  print(i)
+  ind <- list_pat[[i]][,1] %in% overlap
+  list[[i]] <- list[[i]][ind,]
+}
+```
+Now the different omics datasets still have differing numbers of samples, this is because one patient can have multiple samples. Now to get only those samples for which there is data in all omics datasets:
+```{r}
+ind2 <- rownames(list[[1]])
+for(i in 1:length(list)){
+  print(i)
+  ind2 <- rownames(list[[i]]) %in% ind2
+}
+```
+This doesn't work, because for methylation there are only the 'short' patient identifiers.
+
+```{r}
+for(i in 1:length(list)){
+  print(i)
+  short_ids <- list_pat[[i]][rownames(list[[i]]), 'patient_id']
+  dup <- duplicated(short_ids)
+  print(sum(dup))
+  list[[i]] <- list[[i]][!dup,]
+  print(nrow(list[[i]]))
+  print("...")
+}
+```
+It worked. Randomly throwing away data doesn't feel very good, but for now this is the only thing I can come up with. Later on I could try copying the other omics data for duplicate samples, or averaging instead of randomly throwing away some of it.
+
+```{r}
+totes_omes <- cbind(list[[1]], list[[2]], list[[3]])
+```
+```{r}
+# train <- 1:190
+# test <- 191:216
+pheno <- BRCA_pheno[BRCA_mRNA_patients[rownames(totes_omes), 'patient_id'],]
+pheno <- pheno[pheno$days > 0,]
+ind <- BRCA_mRNA_patients[rownames(totes_omes), 'patient_id'] %in% rownames(pheno)
+totes_omes <- totes_omes[ind,]
+mid <- ceiling(0.9*nrow(pheno))
+train <- 1:mid
+test <- (mid+1):nrow(pheno)
+model <- SGL(data = list(x = totes_omes[train,], time = pheno$days[train], status = !as.logical(pheno$censored)[train]), index = rep(1:ncol(BRCA_mRNA_avg), 3), type = "cox")
+pred <- predictSGL(model, newX = totes_omes[test,])
+smod.test <- Surv(pheno$days[test], as.numeric(!as.logical(pheno$censored[test])), type = "right")
+CIndex.test <- survConcordance(smod.test ~ pred[,18])
+```
+```{r}
+plot(model$lambdas)
+```
+```{r}
+beta <- model$beta
+data.frame(Variables=colnames(totes_omes),Coefficients=beta[,20])
+```
+```{r}
+plot(beta[,20], col = c(rep("red", 229), rep("blue", 229), rep("orange", 229)))
+```
+
+```{r}
+mrna <- beta[1:229,20]
+cnv <- beta[230:458, 20]
+meth <- beta[459:687, 20]
+type <- "p"
+cols <- c("orange", "green", "red")
+plot(mrna, cex = ifelse(mrna == 0, 0.05, 0.5), col = "orange", type = type, main = "coefficients for 229 KEGG pathways (average per pathway)", xlab = "pathway index", ylab = "coefficient value")
+lines(cnv, cex = ifelse(cnv == 0, 0.05, 0.5), col = "green", type = type)
+lines(meth, cex = ifelse(meth == 0, 0.05, 0.5), col = "red", type = type)
+legend("bottomright", legend = c("mRNA", "CNV", "methylation"), col = cols, pch = 1, bty = "o")
+```
+
+How would this look if I set the groups to the different omics instead of the pathways?
+
+```{r}
+# train <- 1:190
+# test <- 191:216
+pheno <- BRCA_pheno[BRCA_mRNA_patients[rownames(totes_omes), 'patient_id'],]
+pheno <- pheno[pheno$days > 0,]
+ind <- BRCA_mRNA_patients[rownames(totes_omes), 'patient_id'] %in% rownames(pheno)
+totes_omes <- totes_omes[ind,]
+mid <- ceiling(0.7*nrow(pheno))
+train <- 1:mid
+test <- (mid+1):nrow(pheno)
+model <- SGL(data = list(x = totes_omes[train,], time = pheno$days[train], status = !as.logical(pheno$censored)[train]), index = c(rep(1, ncol(BRCA_mRNA_avg)), rep(2, ncol(BRCA_mRNA_avg)), rep(3, ncol(BRCA_mRNA_avg))), type = "cox")
+pred <- predictSGL(model, newX = totes_omes[test,])
+smod.test <- Surv(pheno$days[test], as.numeric(!as.logical(pheno$censored[test])), type = "right")
+CIndex.test <- survConcordance(smod.test ~ pred[,20])
+beta <- model$beta
+
+mrna <- beta[1:229,20]
+cnv <- beta[230:458, 20]
+meth <- beta[459:687, 20]
+type <- "p"
+cols <- c("orange", "green", "red")
+plot(mrna, cex = ifelse(mrna == 0, 0.05, 0.5), col = "orange", type = type, main = "coefficients for 229 KEGG pathways (average per pathway)", xlab = "pathway index", ylab = "coefficient value")
+lines(cnv, cex = ifelse(cnv == 0, 0.05, 0.5), col = "green", type = type)
+lines(meth, cex = ifelse(meth == 0, 0.05, 0.5), col = "red", type = type)
+legend("bottomright", legend = c("mRNA", "CNV", "methylation"), col = cols, pch = 1, bty = "o")
+```
+Different way to calculate the c-index, since it doesn't seem to work:
+```{r}
+# biocLite("survcomp")
+library(survcomp)
+```
+```{r}
+concordance.index(x=pred[,20], surv.time=pheno$days[test], surv.event=as.numeric(!as.logical(pheno$censored[test])), method="noether")
+```
+
+It says "no events"...
+
+?
+
+Is that because all the times are censored? I think it might be.
+
+```{r}
+# train <- 1:190
+# test <- 191:216
+pheno <- BRCA_pheno[BRCA_mRNA_patients[rownames(totes_omes), 'patient_id'],]
+pheno <- pheno[pheno$days > 0,]
+ind <- BRCA_mRNA_patients[rownames(totes_omes), 'patient_id'] %in% rownames(pheno)
+totes_omes <- totes_omes[ind,]
+mid <- ceiling(0.7*nrow(pheno))
+train <- 1:mid
+test <- (mid+1):nrow(pheno)
+model <- SGL(data = list(x = totes_omes[train,], time = pheno$days[train], status = !as.logical(pheno$censored)[train]), index = rep(1:ncol(BRCA_mRNA_avg), 3), type = "cox")
+pred <- predictSGL(model, newX = totes_omes[test,])
+smod.test <- Surv(pheno$days[test], as.numeric(!as.logical(pheno$censored[test])), type = "right")
+c_indices <- c()
+for(i in 1:20){
+  c_indices <- as.numeric(c(c_indices, survConcordance(smod.test ~ pred[,i])[1]))
+}
+plot(c_indices)
+max(c_indices)
+```
+A c-index of 0.75 is pretty good already, considering I didn't even use cross-validation.
+
+For grouping the omics data:
+```{r}
+c_indices <- c()
+for(i in 1:20){
+  c_indices <- as.numeric(c(c_indices, survConcordance(smod.test ~ pred[,i])[1]))
+}
+plot(c_indices)
+max(c_indices)
+```
+Grouping on omics seems to give an even higher c-index.
+
+```{r}
+GetC <- function(comb_omics, pheno, patients, nomics, group_on_omics = FALSE, npw = 229, survcon = TRUE){
+  # print("str of comb_omics is")
+  # print(str(comb_omics))
+  phe <- pheno[substr(rownames(comb_omics), 1, 12),]
+  phe <- phe[phe$days > 0,]
+  # print(length(patients[rownames(comb_omics), 'patient_id']))
+  # print(rownames(comb_omics)[1:2])
+  # print(patients[rownames(comb_omics), 'patient_id'][1:2])
+  # print(rownames(phe)[1:2])
+  # print(length(rownames(phe)))
+  # print("...")
+  
+  # ind <- patients[rownames(comb_omics), 'patient_id'] %in% rownames(phe)
+  ind <- substr(rownames(comb_omics), 1, 12) %in% rownames(phe)
+  
+  print(sum(ind))
+  
+  # if(sum(ind) == 0){return(NULL)}
+
+  comb_omics <- comb_omics[ind,]
+  mid <- ceiling(0.7*nrow(phe))
+  print(sprintf("mid is %s", mid))
+  train <- 1:mid
+  test <- (mid+1):nrow(phe)
+  #following line needs to be generalized
+  if(group_on_omics){ind <- c(rep(1, npw), rep(2, npw), rep(3, npw))}
+  else{print("group on pathway"); ind <- rep(1:npw, nomics)}
+  
+  # print(sprintf("nrow of comb_omics is %i and nrow of phe is %i", nrow(comb_omics), nrow(phe)))
+  # print("str of comb_omics is")
+  # print(str(comb_omics))
+  # 
+  # print(sum(is.infinite(comb_omics)))
+  print("model starting")
+  model <- SGL(data = list(x = comb_omics[train,], time = as.numeric(phe$days[train]), status = !as.logical(phe$censored)[train]), index = ind, type = "cox")
+  # return(model)
+  print("predict starting")
+  pred <- predictSGL(model, newX = comb_omics[test,])
+  smod.test <- Surv(as.numeric(phe$days[test]), as.numeric(!as.logical(phe$censored[test])), type = "right")
+  c_indices <- c()
+  print("for loop starting")
+  if(survcon){
+    for(i in 1:20){
+      c_indices <- as.numeric(c(c_indices, survConcordance(smod.test ~ pred[,i])[1]))
+    }
+  }
+  else{
+    smod <- Surv(as.numeric(phe$days[train]), as.numeric(!as.logical(phe$censored[train])), type = "right")
+    for(i in 1:20){
+      c_indices <- as.numeric(c(c_indices, UnoC(smod, smod.test, pred[,i])))
+    }
+  }
+  return(c_indices)
+}
+```
+
+```{r}
+# options(scipen = 999)
+for(o in omics[c(1, 3, 6)]){
+  print(o)
+  objname <- sprintf("BRCA_%s_pc1", o)
+  obj <- get(objname)
+  obj <- t(obj)
+  assign(objname, obj)
+}
+```
+```{r}
+om2 <- omics[c(1, 3, 6)]
+for(o in om2){
+  objname <- sprintf("%s_%s_pc1", "BRCA", o)
+  if(exists(objname)){
+    obj <- get(objname)
+    colnames(obj) <- paste(colnames(obj), o, sep = "_")
+    assign(objname, obj)
+  }
+}
+```
+
+```{r}
+d <- "BRCA"
+type <- "ssgsea"
+
+# overlap <- FindIntersection(om2, d)
+
+# IntersectOmics <- function(pat1, pat2, pat3){
+# 
+#   res <- intersect(SmallID(pat1), SmallID(pat2))
+#   res2 <- intersect(res, SmallID(pat3))
+# }
+SmallID <- function(long){return(substr(long, 1, 12))}
+vrownames <- Vectorize(rownames)
+vcolnames <- Vectorize(colnames)
+overlap <- IntersectOmics(rownames(get(sprintf("BRCA_CNV_%s", type))), rownames(get(sprintf("BRCA_methylation_%s", type))), rownames(get(sprintf("BRCA_mRNA_%s", type))))
+
+list <- mget(paste(d, om2, type, sep = "_"))
+# list_pat <- mget(paste(d, om2, "patients", sep = "_"))
+
+for(i in 1:length(list)){
+  print(i)
+  ind <- SmallID(rownames(list[[i]])) %in% overlap
+  list[[i]] <- list[[i]][ind,]
+}
+
+# rownames(BRCA_mRNA_pc1) <- rownames(BRCA_mRNA_avg)
+
+for(i in 1:length(list)){
+  print(i)
+  short_ids <- SmallID(rownames(list[[i]]))
+  dup <- duplicated(short_ids)
+  print(sum(dup))
+  list[[i]] <- list[[i]][!dup,]
+  print(nrow(list[[i]]))
+  print("...")
+}
+
+# total_ssgsea <- cbind(list[[1]], list[[2]], list[[3]])
+# this should be changed, the same patient inputs should be on the same row
+# nevermind, this is already the case
+# totes_omes <- cbind(list[[1]], list[[2]], list[[3]])
+# totes_omes <- cbind(list[[3]])
+# total <- cbind(list[[1]], list[[3]], list[[4]])
+# total <- cbind(list[[1]], list[[2]])
+# total <- cbind(list[[1]])
+```
+
+```{r}
+
+pc1_c_indices <- GetC(total, BRCA_pheno, BRCA_mRNA_patients, nomics = 3)
+```
+```{r}
+avg_c_indices <- GetC(totes_omes, BRCA_pheno, BRCA_mRNA_patients, nomics = 3)
+avg_c_indices_group_on_omics <- GetC(totes_omes, BRCA_pheno, BRCA_mRNA_patients, nomics = 3, group_on_omics = TRUE)
+
+```
+
+I get the same error with grouping on omics or on pathway. I'll leave this for tomorrow, I'm not getting any further right now.
+
+28-04-2017
+
+options(scipen = 999) ?
+
+Calculating the pca-matrices again.
+
+check output of prcomp/predict for exponentials with 'e'.
+
+02-05-2017
+
+For one of the pathways in the pc1-matrix, variance is 0, so when the data is standardized in the SGL function, there is a division by 0 which gives an NA value. This causes the function to give an error message and crash.
+The reason the variance is zero, is because all values are zero. This is because there is only one gene in this pathway, and it is apparently not accounted for in the mRNA data for BRCA. Or maybe (probably, since average also worked) it is, but since it is only one value PCA doesn't make much sense and returns 0 (probably).
+
+```{r}
+plot(1:10)
+```
+plot() doesn't work anymore... System administrator has been notified.
+Ha, it works again.
+
+```{r}
+plot(pc1_c_indices)
+```
+
+There were some strange errors with the server today, and it was really slow at some moments.
+
+```{r}
+pc1_c_indices <- GetC(t(BRCA_mRNA_pc1), BRCA_pheno, BRCA_mRNA_patients, nomics = 1)
+```
+
+Okay, so, for some reason the patient id's for BRCA_mRNA have reverted to being separated by dashes instead of dots...
+
+(╯°□°）╯︵ ┻━┻
+
+```{r}
+vpaste0 <- Vectorize(paste0)
+colnames(BRCA_mRNA_pc1) <- unlist(lapply(strsplit(colnames(BRCA_mRNA_pc1), split = "[-]"), vpaste0, collapse = "."))
+```
+
+```{r}
+pc1_c_indices <- GetC(t(BRCA_mRNA_pc1), BRCA_pheno, BRCA_mRNA_patients, nomics = 1)
+```
+
+Finally, we're back at the same error message as this morning. This time I know what the problem is, but not how to solve it. For now, trying it without the zeroes-column:
+
+```{r}
+pc1_c_indices <- GetC(t(BRCA_mRNA_pc1)[,-199], BRCA_pheno, BRCA_mRNA_patients, nomics = 1, npw = 228)
+```
+
+Eeeey, it worked (leaving out the 199th pathway for now, and only using BRCA_mRNA_pc1).
+
+```{r}
+total <- cbind(list[[1]], list[[2]], list[[3]], list[[4]])
+
+pc1_c_indices <- GetC(total[,c(-199, 229+199, 2*229+199, 3*229+199)], BRCA_pheno, BRCA_mRNA_patients, nomics = 1, npw = 228)
+```
+
+TODO:
+
+Check gene (miRNA) names for miRNASeq, they seem to be of a different format than miRNA from microarray.
+
+```{r}
+colnames(BRCA_CNV_avg) <- names(kegg2)
+colnames(BRCA_methylation_avg) <- names(kegg2)
+colnames(BRCA_mRNA_avg) <- names(kegg2)
+```
+
+05-05-2017
+
+```{r}
+plot(avg_c_indices_group_on_omics, type = "l", ylab = "C-index", xlab = "lambda", ylim = c(0,1))
+lines(avg_c_indices_group_on_pw, type = "l", col = "purple")
+legend("bottomright", legend = c("grouped on omics", "grouped on pathway"), col = c("black", "purple"), pch = 16)
+```
+
+Monday:
+
+- Implement cross-validation loop for calculating c-indices
+- After lunch, work discussion with Ashar
+
+08-05-2017
+
+```{r}
+# install.packages("caret")
+# install.packages("survAUC")
+library(caret)
+library(survAUC)
+```
+
+```{r}
+# r <- sample(1:10000, size = 1)
+CrossValidatedSGLCox <- function(data, pheno, npw = 229, nomics = 3){
+  # shouldn't there also be an overall testing set that is left out of this cv?
+  ind <- c()
+  for(k in 1:nomics){ind <- c(ind, rep(k, npw))}
+  C_indices <- matrix(0, ncol = 10, nrow = 10)
+  foreach(i = 1:10, .combine = rbind) %dopar% {
+    print(sprintf("i is %s", i))
+    set.seed(seed = r * i)
+    folds <- createFolds(y = pheno$days, k = 10)
+    foreach(j = 1:10, .combine = rbind) %dopar% {
+      print(sprintf("j is %s", j))
+      testing <- unlist(folds[j])
+      training <- unlist(folds[-j])
+      
+      # tune lambda (cvSGL)
+      # train model with found values for alpha, lambda
+      print("cvSGL starting...")
+      model <- cvSGL(
+        data = list(x = data[training,], time = pheno$days[training], status = !pheno$censored[training]),
+        index = ind,
+        type = "cox",
+        nfold = 10,
+        verbose = TRUE,
+        alpha = 0.5)
+      # model <- SGL(data = list(x = data[training,], time = pheno$days[training], status = !pheno$censored[training]), 
+        # index = ind,
+        # type = "cox")
+      print("cvSGL finished")
+      # return(model)
+      print("predictSGL starting...")
+      # predict testing set outcome
+      print(sprintf("type of model is %s", model$type))
+      model2 <- model$fit
+      model2$type <- "cox"
+      pred <- predictSGL(model2, newX = data[testing,])
+      print("predictSGL finished")
+      # save smooth Uno C-index estimator
+      trainsurv <- Surv(time = pheno[training,'days'], event = !pheno[training,'censored'])
+      testsurv <- Surv(time = pheno[testing,'days'], event = !pheno[testing,'censored'])
+      print("UnoC starting...")
+      NewC <- UnoC(Surv.rsp = trainsurv, Surv.rsp.new = testsurv, lpnew = pred[,20])
+      
+      NewC
+    }
+  }
+  return(C_indices)
+}
+```
+
+```{r}
+pheno_BRCA_intersect <- BRCA_pheno[substr(rownames(totes_omes), 1, 12),]
+pheno_BRCA_intersect <- pheno_BRCA_intersect[pheno_BRCA_intersect$days > 0,]
+pheno_BRCA_intersect$days <- as.numeric(pheno_BRCA_intersect$days)
+pheno_BRCA_intersect$censored <- as.logical(pheno_BRCA_intersect$censored)
+```
+
+```{r}
+model <- CrossValidatedSGLCox(data = totes_omes, pheno = pheno_BRCA_intersect)
+```
+The problem is that, while it works for SGL-objects, it doesn't work for cvSGL-objects. The predictSGL function needs to know both the type of the model (which is in the result of cvSGL) and it needs to be able to access 'beta' (which is in the fit-result of cvSGL) 
+
+09-05-2017
+
+```{r}
+avg_c_indices_unoc <- GetC(totes_omes, BRCA_pheno, BRCA_mRNA_patients, nomics = 3, survcon = FALSE)
+avg_c_indices_group_on_omics_unoc <- GetC(totes_omes, BRCA_pheno, BRCA_mRNA_patients, nomics = 3, group_on_omics = TRUE, survcon = FALSE)
+```
+
+```{r}
+plot(avg_c_indices_group_on_omics_unoc, type = "l", ylab = "C-index", xlab = "lambda", ylim = c(0,1))
+lines(avg_c_indices_unoc, type = "l", col = "purple")
+legend("bottomright", legend = c("grouped on omics", "grouped on pathway"), col = c("black", "purple"), pch = 16)
+```
+
+```{r}
+plot(avg_c_indices_group_on_omics, type = "l", ylab = "C-index", xlab = "lambda", ylim = c(0,1))
+lines(avg_c_indices_group_on_pw, type = "l", col = "purple")
+legend("bottomright", legend = c("grouped on omics", "grouped on pathway"), col = c("black", "purple"), pch = 16)
+```
+
+```{r}
+par(mfrow = c(1,2))
+plot(avg_c_indices_group_on_omics, type = "l", ylab = "C-index", xlab = "lambda", ylim = c(0,1), main = "survConcordance C-index")
+lines(avg_c_indices_group_on_pw, type = "l", col = "purple")
+legend("bottomright", legend = c("grouped on omics", "grouped on pathway"), col = c("black", "purple"), pch = 16)
+
+plot(avg_c_indices_group_on_omics_unoc, type = "l", ylab = "C-index", xlab = "lambda", ylim = c(0,1), main = "Uno C-index")
+lines(avg_c_indices_unoc, type = "l", col = "purple")
+legend("bottomright", legend = c("grouped on omics", "grouped on pathway"), col = c("black", "purple"), pch = 16)
+```
+
+```{r}
+# par(mfrow = c(1,2))
+plot(avg_c_indices_group_on_omics, type = "l", ylab = "C-index", xlab = "lambda", ylim = c(0,1), main = "survConcordance C-index")
+lines(avg_c_indices_group_on_pw, type = "l", col = "purple")
+lines(avg_c_indices_group_on_omics_unoc, type = "l", col = "blue")
+lines(avg_c_indices_unoc, type = "l", col = "darkgreen")
+legend("bottomright", legend = c("grouped on omics", "grouped on pathway", "omics Uno", "pw Uno"), col = c("black", "purple", "blue", "darkgreen"), pch = 16)
+```
+Exploring parallel computing with the doMC-package:
+```{r}
+library(doMC)
+detectCores()
+registerDoMC(cores = 20)
+
+testje <- foreach(i=1:6) %dopar% {i*1000}
+folds <- createFolds(y = pheno$days, k = 10)
+mat <- matrix(0, ncol = 10, nrow = 10)
+test <- foreach(fold = folds) %dopar% {
+  mean(fold)
+  foreach(j = 1:10){
+    foreach(i = 1:10) %dopar%{
+      mat[j,i] <- j*i
+    }
+  }
+}
+```
+
+```{r}
+test <- function(pheno){
+  ind <- c()
+  for(k in 1:3){ind <- c(ind, rep(k, npw))}
+  mat <- foreach(j = 1:3, .combine = rbind) %dopar% {
+    set.seed(seed = r * i)
+    folds <- createFolds(y = pheno$days, k = 3)
+    foreach(i = 1:3, .combine = cbind) %dopar%{
+      testing <- unlist(folds[j])
+      training <- unlist(folds[-j])
+      trainsurv <- Surv(time = pheno[training,'days'], event = !pheno[training,'censored'])
+      testsurv <- Surv(time = pheno[testing,'days'], event = !pheno[testing,'censored'])
+      mean(testing)/mean(training)
+    }
+  }
+  return(mat)
+}
+testje <- test(pheno_BRCA_intersect)
+```
+
+```{r}
+# r <- sample(1:10000, size = 1)
+CrossValidatedSGLCox_parallel <- function(data, pheno, npw = 229, nomics = 3, nfolds = 10, niter = 10, unoc = TRUE){
+  # shouldn't there also be an overall testing set that is left out of this cv?
+  ind <- c()
+  for(k in 1:nomics){ind <- c(ind, rep(k, npw))}
+  C_indices <- foreach(i = 1:niter, .combine = rbind) %dopar% {
+    set.seed(seed = r * i)
+    folds <- createFolds(y = pheno$days, k = nfolds)
+    foreach(j = 1:nfolds, .combine = cbind) %dopar% {
+      testing <- unlist(folds[j])
+      training <- unlist(folds[-j])
+      # tune lambda (cvSGL)
+      # train model with found values for alpha, lambda
+      model <- cvSGL(
+        data = list(x = data[training,], time = pheno$days[training], status = !pheno$censored[training]),
+        index = ind,
+        type = "cox",
+        nfold = 10,
+        verbose = TRUE,
+        alpha = 0.5)
+      # model <- SGL(data = list(x = data[training,], time = pheno$days[training], status = !pheno$censored[training]), 
+      # index = ind,
+      # type = "cox")
+      model2 <- model$fit
+      model2$type <- "cox"
+      pred <- predictSGL(model2, newX = data[testing,])
+      # save smooth Uno C-index estimator
+      trainsurv <- Surv(time = pheno[training,'days'], event = !pheno[training,'censored'], type = "right")
+      testsurv <- Surv(time = pheno[testing,'days'], event = !pheno[testing,'censored'], type = "right")
+      if(unoc){
+        NewC <- UnoC(Surv.rsp = trainsurv, Surv.rsp.new = testsurv, lpnew = pred[,20])
+      }
+      else{
+        NewC <- survConcordance(testsurv ~ pred[,20])[1]
+      }
+      NewC
+    }
+  }
+  return(C_indices)
+}
+```
+
+```{r}
+model_avg <- CrossValidatedSGLCox(data = totes_omes, pheno = pheno_BRCA_intersect, niter = 10, nfolds = 10)
+```
+
+It worked! Some values are NaN, investigate why this is happening. The average Uno C-index for average per pathway (disregarding the NaN values) is 0.5988351.
+
+```{r}
+model_pc1 <- CrossValidatedSGLCox(data = total, pheno = pheno_BRCA_intersect, niter = 10, nfolds = 10)
+```
+
+The average Uno C-index for first principal component per pathway is 0.5720782. These values are pretty low...
+
+I want to know what the C-indices would look like if I use the survConcordance function.
+
+```{r}
+model_avg_oldc <- CrossValidatedSGLCox_parallel(data = totes_omes, pheno = pheno_BRCA_intersect, niter = 10, nfolds = 10, unoc = FALSE)
+model_pc1_oldc <- CrossValidatedSGLCox_parallel(data = total, pheno = pheno_BRCA_intersect, niter = 10, nfolds = 10, unoc = FALSE)
+model_avg_unoc <- CrossValidatedSGLCox_parallel(data = totes_omes, pheno = pheno_BRCA_intersect, niter = 10, nfolds = 10, unoc = TRUE)
+```
+
+```{r}
+avg_old <- matrix(unlist(model_avg_oldc), ncol = 10, nrow = 10)
+pc1_old <- matrix(unlist(model_pc1_oldc), ncol = 10, nrow = 10)
+print(mean(as.numeric(model_avg_oldc[!is.nan(avg_old)])), mean(as.numeric(model_pc1_oldc[!is.nan(pc1_old)])))
+```
+
+11-05-2017
+
+Now I will be working on summarizing all BRCA data with the ssGSEA method (SVA package).
+
+Done.
+
+```{r}
+library(doMC)
+# detectCores()
+registerDoMC(cores = 20)
+model_ssgsea_oldc <- CrossValidatedSGLCox_parallel(data = total_ssgsea, pheno = pheno_BRCA_intersect, niter = 10, nfolds = 10, unoc = FALSE)
+model_ssgsea_unoc <- CrossValidatedSGLCox_parallel(data = total_ssgsea, pheno = pheno_BRCA_intersect, niter = 10, nfolds = 10, unoc = TRUE)
+```
+
