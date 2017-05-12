@@ -177,22 +177,30 @@ FirstPCPerPathway <- function(om, data, patients, lookup = entrez_hgnc, pwlist =
   }
   else{
     genes <- lookup[rownames(data), "entrezgene"]
+    pwlist <- pwlist[[1]]
   }
   res <- do.call(rbind, 
                  lapply(
                    pwlist,
-                   function(pw_genes){
-                     ind <- genes %in% pw_genes
-                     ind2 <- abs(data[ind,])
-                     if(sum(ind) == 0){return(NULL)}
-                     pw2 <- predict(prcomp(t(ind2)), newdata = t(ind2))[,1]
-                     names(pw2) <- NULL
-                     return(pw2)
-                   }
+                   pc1_per_pathway,
+                   genes,
+                   om,
+                   data
                  )
   )
-  colnames(res) <- rownames(patients)
+  colnames(res) <- colnames(data)
   return(res)
+}
+
+pc1_per_pathway <- function(pw_genes, genes, om, data){
+  ind <- genes %in% pw_genes
+  if(om == "CNV"){fun <- abs}else{fun <- identity}
+  if(sum(ind) == 0){return(NULL)}
+  if(sum(ind) == 1){return(fun(data[ind,]))}
+  ind2 <- fun(data[ind,])
+  pw2 <- predict(prcomp(t(ind2), scale. = TRUE), newdata = t(ind2))[,1]
+  names(pw2) <- NULL
+  return(pw2)
 }
 
 HgncToEntrez <- function(hgnc){
@@ -229,15 +237,41 @@ RUCN <- function(data, patients){
   return(res)
 }
 
-AveragePerPathway <- Vectorize(function(i, dis, om, fun = mean){
+avgperpw <- function(i, dis, om, fun = mean, top50 = FALSE, pval = NULL){
+  # print("i is:")
+  # print(i)
+  # print("\n")
   obj <- get(sprintf("%s_%s", dis, om))
-  if(om == "miRNA" | om == "miRNASeq"){
+  fun2 <- identity
+  fun3 <- fun2
+  if(om == "CNV"){
+    fun2 <- abs
+  }
+  if(om == "miRNA" | om == "miRNAseq"){
     ind <- rownames(obj) %in% pw_miRNA[[i]]
+    fun3 <- HgncToEntrez
   }
   else{
     ind <- rownames(obj) %in% EntrezToHgnc(as.numeric(kegg2[[i]]))
+    # print(sum(ind))
   }
   if(sum(ind) == 0){return(NULL)}
-  if(sum(ind) == 1){return(abs(obj[ind,]))}
-  return(apply(abs(obj[ind,]), 2, fun))
-})
+  if(sum(ind) == 1){return(fun2(obj[ind,]))}
+  if(top50){
+    # print(pval[1:4])
+    pval_pw <- pval[rownames(obj)[ind]]
+    # print(rownames(obj)[ind])
+    # print(pval_pw)
+    order1 <- order(pval_pw, decreasing = FALSE)
+    # print(order1)
+    top <- names(pval_pw[order1[1:ceiling(length(order1)/2)]])
+    # print(top)
+    if(length(top) == 1){return(fun2(obj[fun3(top),]))}
+    return(apply(fun2(obj[fun3(top),]), 2, fun))
+  }
+  else{
+    return(apply(fun2(obj[ind,]), 2, fun))
+  }
+}
+
+AveragePerPathway <- Vectorize(avgperpw, vectorize.args = "i")
