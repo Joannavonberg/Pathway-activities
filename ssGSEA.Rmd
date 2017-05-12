@@ -16,20 +16,47 @@ BRCA_mRNA_pw_gsva <- gsva_test$es.obs
 ```
 
 ```{r}
-for(d in names(diseases)){
+for(d in "BRCA"){
   print(d)
-  for(o in omics[c(-2, -4)]){
+  for(o in omics){
+    if(o == "CNV"){fun <- abs}
+    else{fun <- identity}
     objname <- sprintf("%s_%s", d, o)
     print(objname)
     if(exists(objname)){
       obj <- get(objname)
       obj2 <- obj
-      if(o == "miRNA"){pw <- pw_miRNA}
-      else{pw <- kegg2; rownames(obj2) <- HgncToEntrez(rownames(obj))}
-      res <- gsva(obj2, pw)$es.obs
+      if(o == "miRNA" | o == "miRNASeq"){pw <- pw_miRNA}
+      else{
+        pw <- kegg2
+        rn <- HgncToEntrez(rownames(obj))
+        dupli <- duplicated(rn)
+        ind <- !dupli & !is.na(rn)
+        obj2 <- obj[ind,]
+        rownames(obj2) <- rn[ind]
+        print(class(obj2))
+      }
+      res <- gsva(
+        fun(obj2), 
+        pw, 
+        method = "ssgsea", 
+        rnaseq = ifelse((o == "mRNASeq" | o == "miRNASeq"), TRUE, FALSE)
+      )
       assign(sprintf("%s_ssgsea", objname), res)
     }
   }
 }
+```
+
+Remember to use absolute values for CNV data!
+
+11-04-2017
+
+Done, used absolute values for CNV, original data for the other omics data.
+
+11-05-2017
+
+```{r}
+
 ```
 
